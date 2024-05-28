@@ -76,7 +76,7 @@ side board::getOpponent()
 
 bool board::validateStartPos(const start_pos &p)
 {
-  return p.loc > 0 && p.bitboard != nullptr;
+  return p.loc > 0 && p.bitboard != nullptr && *p.bitboard & pieces_side[curPlayer];
 }
 
 bool board::validatePawnMove(const move &m)
@@ -96,7 +96,7 @@ bool board::validatePawnMove(const move &m)
   if (m.d == 8 * sign)
     return m.end.bitboard == nullptr;
   if (m.d == 16 * sign)
-    return (m.start.loc & startPos) && m.end.bitboard == nullptr && checkCollision(m, 8 * m.sign);
+    return (m.start.loc & startPos) && m.end.bitboard == nullptr && checkCollision(m, 8 * m.sign, 0);
   if (m.d == 7 * sign || m.d == 9 * sign)
     return m.end.bitboard != nullptr;
 
@@ -108,9 +108,9 @@ bool board::validateRookMove(const move &m)
   int d = (m.d > 0 ? m.d : -m.d);
   
   if (d < 8)
-    return checkCollision(m, m.sign);
+    return checkCollision(m, m.sign, (m.sign > 0 ? left_boundary : right_boundary));
   if (d % 8 == 0)
-    return checkCollision(m, 8 * m.sign);
+    return checkCollision(m, 8 * m.sign, 0);
   
   return false;
 }
@@ -118,9 +118,9 @@ bool board::validateRookMove(const move &m)
 bool board::validateBishopMove(const move &m)
 {
   if (m.d % 9 == 0)
-    return checkCollision(m, 9 * m.sign);
+    return checkCollision(m, 9 * m.sign, (m.sign > 0 ? right_boundary : left_boundary));
   if (m.d % 7 == 0)
-    return checkCollision(m, 7 * m.sign);
+    return checkCollision(m, 7 * m.sign, (m.sign > 0 ? left_boundary : right_boundary));
 
   return false;
 }
@@ -142,16 +142,18 @@ bool board::validateKingMove(const move &m)
   return d == 1 || d == 8 || d == 9 || d == 7;
 }
 
-bool board::checkCollision(const move &m, int d)
+bool board::checkCollision(const move &m, int d, u64 boundary)
 {
   int abs = (d > 0 ? d : -d);
-  u64 ray = (d > 0 ? m.start.loc >> abs : m.start.loc << abs);
+  boundary = ~boundary;
+  u64 ray = m.start.loc;
+  ray = (d > 0 ? ray >> abs : ray << abs) & boundary;
 
   while (ray != m.end.loc) {
     if (ray == 0 || ray & ~empty)
       return false;
 
-    ray = (d > 0 ? ray >> abs : ray << abs);
+    ray = (d > 0 ? ray >> abs : ray << abs) & boundary;
   }
 
   return true;
@@ -231,7 +233,7 @@ u64 board::genRookMoves(u64 b, side s)
 
 u64 board::genBishopMoves(u64 b, side s)
 {
-  return traceRay(b, 7, true, left_boundary, s) | traceRay(b, 9, true, right_boundary, s) | traceRay(b, 7, false, right_boundary, s) | traceRay(b, 9, false, left_boundary, s);
+  return traceRay(b, 7, true, right_boundary, s) | traceRay(b, 9, true, left_boundary, s) | traceRay(b, 7, false, left_boundary, s) | traceRay(b, 9, false, right_boundary, s);
 }
 
 u64 board::genKnightMoves(u64 b, side s)

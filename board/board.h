@@ -72,7 +72,7 @@ private:
   bool validateKnightMove(const move &);
   bool validateQueenMove(const move &);
   bool validateKingMove(const move &);
-  bool checkCollision(const move &, int d);
+  bool checkCollision(const move &, int, u64);
   side getOpponent();
   u64 traceRay(u64, int, bool, u64, side);
   u64 genRookMoves(u64, side);
