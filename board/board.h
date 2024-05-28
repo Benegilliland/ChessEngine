@@ -110,12 +110,12 @@ public:
   end_pos getEndPos();  
   move getMove();
   void movePieces(const move &);
-  void doMove(const move &, bool pretend = false);
-  void undoMove(const move &);
+  void doMove(const move &);
   void undoLastMove();
   bool validateStartPos(const start_pos &);
   bool validateMove(const move &);
   void switchPlayer();
   void genStartMoves(const start_pos &);
+  bool playerCanMove();
   bool inCheck();
 };

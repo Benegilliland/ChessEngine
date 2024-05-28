@@ -1,4 +1,5 @@
 #include "engine.h"
+#include <unistd.h>
 
 void engine::reset()
 {
@@ -86,8 +87,12 @@ void engine::run()
     move m = getMove();
     doMove(m);
     switchPlayer();
-    if (b.inCheck())
-      std::cout << "Check please\n";
+
+    if (!b.playerCanMove()) {
+      std::cout << (b.inCheck() ? "Checkmate" : "Stalemate") << "\n";
+      sleep(5);
+      break;
+    }
   }
 }
 

@@ -1,6 +1,11 @@
 #include "board.h"
-//castling not working
-//move generation penetrates enemy pieces
+
+// Knight move generation/validation is buggy (add boundaries)
+// Add en passant
+// Add draw by repetition
+// Add draw by insufficient material
+// Move generation should check for valid moves
+
 void board::reset()
 {
   resetPieces();
@@ -57,27 +62,25 @@ void board::movePieces(const move &m)
   setPiecesSide();
 }
 
-void board::doMove(const move &m, bool pretend)
+void board::doMove(const move &m)
 {
   movePieces(m);
   
-  if (!pretend) {
-    if (m.start.loc == piece_start[curPlayer][piece::king])
-      canCastle[curPlayer][queenside] = canCastle[curPlayer][kingside] = false;
+  if (m.start.loc == piece_start[curPlayer][piece::king])
+    canCastle[curPlayer][queenside] = canCastle[curPlayer][kingside] = false;
 
-    if (m.start.loc & piece_start[curPlayer][piece::rook]) {
-      castling side = (m.start.loc & (u64)0x8000000000000080) ? kingside : queenside;
-      canCastle[curPlayer][side] = false;
-    }
-
-    move_history.push_front(m);
+  if (m.start.loc & piece_start[curPlayer][piece::rook]) {
+    castling side = (m.start.loc & (u64)0x8000000000000080) ? kingside : queenside;
+    canCastle[curPlayer][side] = false;
   }
+
+  move_history.push_front(m);
 }
 
-void board::undoMove(const move &m) {
-  //move m = move_history.front();
+void board::undoLastMove() {
+  move m = move_history.front();
   movePieces(m);
-  //move_history.pop_front();
+  move_history.pop_front();
 }
 
 side board::getOpponent()
@@ -274,10 +277,12 @@ u64 board::traceRay(u64 bitboard, int direction, bool left, u64 boundary, side s
 {
   u64 result = bitboard, ray = bitboard;
   boundary = ~boundary;
+  //u64 not_enemy_pieces = pieces_side[s] | empty;
 
   for (int i = 1; i < 8; i++) {
     ray = (left ? ray << direction : ray >> direction) & boundary & ~pieces_side[s];
     result |= ray;
+    ray &= empty;
   }
 
   return result ^ bitboard;
@@ -365,4 +370,9 @@ void board::genStartMoves(const start_pos &p)
 bool board::inCheck()
 {
   return genMoves(getOpponent()) & pieces[curPlayer][piece::king];
+}
+
+bool board::playerCanMove()
+{
+  return (genMoves(curPlayer) > 0);
 }
