@@ -85,6 +85,8 @@ private:
   bool validateBishopMove(const move &);
   bool validateKnightMove(const move &);
   bool validateQueenMove(const move &);
+  bool validateQueensideCastling(const move &, u64, u64);
+  bool validateKingsideCastling(const move  &, u64, u64);
   bool validateCastling(const move &);
   bool validateKingMove(const move &);
   bool checkCollision(const move &, int, u64);

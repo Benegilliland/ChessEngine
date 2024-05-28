@@ -44,14 +44,14 @@ void board::movePieces(const move &m)
 {
   *m.start.bitboard ^= (m.start.loc | m.end.loc);
   if (m.end.bitboard) *m.end.bitboard ^= m.end.loc;
-
+  std::cout << "making move " << m.d << "\n";
   // Castling
-  if (m.start.pc == piece::king && m.d == 2) {
+  if (m.start.pc == piece::king && (m.d == 2 || m.d == -2)) {
     std::cout << "Castling\n";
     if (m.end.loc << 1 & pieces[curPlayer][piece::rook])
       pieces[curPlayer][piece::rook] ^= (m.end.loc << 1 | m.end.loc >> 1);
     else
-      pieces[curPlayer][piece::rook] ^= (m.end.loc >> 2 | m.end.loc << 1);
+      pieces[curPlayer][piece::rook] ^= (m.end.loc >> 1 | m.end.loc << 1);
   }
 
   setPiecesSide();
@@ -147,26 +147,32 @@ bool board::validateQueenMove(const move &m)
   return validateRookMove(m) || validateBishopMove(m);
 }
 
+bool board::validateQueensideCastling(const move &m, u64 mask, u64 enemy_moves)
+{
+  u64 collisions = 0x1E0000000000001E & mask;
+  u64 own_pieces = (pieces_side[curPlayer] ^ pieces[curPlayer][piece::king]) & collisions;
+  enemy_moves &= collisions;
+
+  return m.end.loc & 0x0400000000000004 && canCastle[curPlayer][queenside]
+        && !enemy_moves && !own_pieces;
+}
+
+bool board::validateKingsideCastling(const move &m, u64 mask, u64 enemy_moves)
+{
+  u64 collisions = 0x7000000000000070 & mask;
+  u64 own_pieces = (pieces_side[curPlayer] ^ pieces[curPlayer][piece::king]) & collisions;
+  enemy_moves &= collisions;
+
+  return m.end.loc & 0x4000000000000040 && canCastle[curPlayer][kingside]
+      && enemy_moves == 0 && own_pieces == 0;
+}
+
 bool board::validateCastling(const move &m)
 {
-  std::cout << "Testing castling\n";
-  u64 enemy_moves = genMoves(getOpponent());
-  std::cout << "Enemy moves:\n";
-  printBitboard(enemy_moves);
-  std::cout << "End loc: " << m.end.loc << "\n";
-  std::cout << "Queenside: " << (m.end.loc & (u64)0x0400000000000004) << "\n";
-  std::cout << "Kingside: " << (m.end.loc & (u64)0x4000000000000040) << "\n";
-  // Queenside castling
-  if (m.end.loc & (u64)0x0400000000000004 && canCastle[curPlayer][queenside] 
-    && (enemy_moves & (u64)0x3800000000000038) == 0)
-    return true;
-  
-  // Kingside castling
-  if (m.end.loc & (u64)0x4000000000000040 && canCastle[curPlayer][kingside]
-    && (enemy_moves & (u64)0x0E0000000000000E) == 0)
-    return true;
+  u64 mask = (curPlayer == side::white) ? 0xFF00000000000000 : 0x00000000000000FF;  
+  u64 enemy_moves = genMoves(getOpponent()) & mask;
 
-  return false;
+  return validateQueensideCastling(m, mask, enemy_moves) || validateKingsideCastling(m, mask, enemy_moves);
 }
 
 bool board::validateKingMove(const move &m)
@@ -227,6 +233,7 @@ bool board::validateMove(const move &m)
       break;
     case piece::king:
       valid = validateKingMove(m);
+      std::cout << "Hmm: " << valid << "\n";
       break;
     default:
       return false;
