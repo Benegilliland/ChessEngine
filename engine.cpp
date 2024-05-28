@@ -46,6 +46,11 @@ void engine::calcDiff(move &m)
   m.d = d;
 }
 
+void engine::showAvailableMoves(const start_pos &p)
+{
+  b.genStartMoves(p);
+}
+
 move engine::getMove()
 { 
   bool validMove = false;
@@ -54,10 +59,9 @@ move engine::getMove()
   while (!validMove) {
     b.print();
     m.start = getStartPos();
-    b.genStartMoves(m.start);
+    showAvailableMoves(m.start);
     m.end = getEndPos();
     calcDiff(m);
-    std::cout << "d = " << m.d << '\n';
     validMove = b.validateMove(m);
   }
 

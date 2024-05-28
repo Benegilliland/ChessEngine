@@ -1,27 +1,20 @@
 #include "board.h"
-
+//castling not working
+//move generation penetrates enemy pieces
 void board::reset()
 {
-  pieces[side::black][piece::pawn] = 0x000000000000ff00;
-  pieces[side::white][piece::pawn] = 0x00ff000000000000;
-  
-  pieces[side::black][piece::knight] = 0x0000000000000024;
-  pieces[side::white][piece::knight] = 0x2400000000000000;
-
-  pieces[side::black][piece::bishop] = 0x0000000000000042;
-  pieces[side::white][piece::bishop] = 0x4200000000000000;
-
-  pieces[side::black][piece::rook] = 0x0000000000000081;
-  pieces[side::white][piece::rook] = 0x8100000000000000;
-
-  pieces[side::black][piece::queen] = 0x0000000000000010;
-  pieces[side::white][piece::queen] = 0x1000000000000000;
-
-  pieces[side::black][piece::king] = 0x0000000000000008;
-  pieces[side::white][piece::king] = 0x0800000000000000;
-
+  resetPieces();
   setPiecesSide();
   curPlayer = side::white;
+  canCastle[side::white][queenside] = canCastle[side::white][kingside]
+    = canCastle[side::black][queenside] = canCastle[side::black][kingside] = true;
+}
+
+void board::resetPieces()
+{
+  for (int s = 0; s < NUM_SIDES; s++)
+    for (int p = 0; p < NUM_PIECES; p++)
+      pieces[s][p] = piece_start[s][p];
 }
 
 void board::setPiecesSide()
@@ -47,25 +40,43 @@ start_pos board::locToStartPos(u64 loc)
   return start_pos{nullptr, piece::none, loc};
 }
 
-void board::doMove(const move &m)
+void board::movePieces(const move &m)
 {
-  u64 mv = m.start.loc | m.end.loc;
-  
-  *m.start.bitboard ^= mv;
+  *m.start.bitboard ^= (m.start.loc | m.end.loc);
   if (m.end.bitboard) *m.end.bitboard ^= m.end.loc;
 
-  // Optimise this
+  // Castling
+  if (m.start.pc == piece::king && m.d == 2) {
+    std::cout << "Castling\n";
+    if (m.end.loc << 1 & pieces[curPlayer][piece::rook])
+      pieces[curPlayer][piece::rook] ^= (m.end.loc << 1 | m.end.loc >> 1);
+    else
+      pieces[curPlayer][piece::rook] ^= (m.end.loc >> 2 | m.end.loc << 1);
+  }
+
   setPiecesSide();
-  //move_history.push_front(m);
+}
+
+void board::doMove(const move &m, bool pretend)
+{
+  movePieces(m);
+  
+  if (!pretend) {
+    if (m.start.loc == piece_start[curPlayer][piece::king])
+      canCastle[curPlayer][queenside] = canCastle[curPlayer][kingside] = false;
+
+    if (m.start.loc & piece_start[curPlayer][piece::rook]) {
+      castling side = (m.start.loc & (u64)0x8000000000000080) ? kingside : queenside;
+      canCastle[curPlayer][side] = false;
+    }
+
+    move_history.push_front(m);
+  }
 }
 
 void board::undoMove(const move &m) {
   //move m = move_history.front();
-  u64 mv = m.start.loc | m.end.loc;
-  *m.start.bitboard ^= mv;
-  if (m.end.bitboard) *m.end.bitboard ^= m.end.loc;
-
-  setPiecesSide();
+  movePieces(m);
   //move_history.pop_front();
 }
 
@@ -136,9 +147,35 @@ bool board::validateQueenMove(const move &m)
   return validateRookMove(m) || validateBishopMove(m);
 }
 
+bool board::validateCastling(const move &m)
+{
+  std::cout << "Testing castling\n";
+  u64 enemy_moves = genMoves(getOpponent());
+  std::cout << "Enemy moves:\n";
+  printBitboard(enemy_moves);
+  std::cout << "End loc: " << m.end.loc << "\n";
+  std::cout << "Queenside: " << (m.end.loc & (u64)0x0400000000000004) << "\n";
+  std::cout << "Kingside: " << (m.end.loc & (u64)0x4000000000000040) << "\n";
+  // Queenside castling
+  if (m.end.loc & (u64)0x0400000000000004 && canCastle[curPlayer][queenside] 
+    && (enemy_moves & (u64)0x3800000000000038) == 0)
+    return true;
+  
+  // Kingside castling
+  if (m.end.loc & (u64)0x4000000000000040 && canCastle[curPlayer][kingside]
+    && (enemy_moves & (u64)0x0E0000000000000E) == 0)
+    return true;
+
+  return false;
+}
+
 bool board::validateKingMove(const move &m)
 {
   int d = (m.d > 0 ? m.d : -m.d);
+  
+  if (d == 2)
+    return validateCastling(m);
+
   return d == 1 || d == 8 || d == 9 || d == 7;
 }
 
@@ -191,12 +228,14 @@ bool board::validateMove(const move &m)
     case piece::king:
       valid = validateKingMove(m);
       break;
+    default:
+      return false;
   }
 
   if (valid) {
-    doMove(m);
+    movePieces(m);
     valid = !inCheck();
-    undoMove(m);
+    movePieces(m);
   }
 
   return valid;
@@ -207,10 +246,21 @@ void board::switchPlayer()
   curPlayer = getOpponent();
 }
 
+u64 board::genWhitePawnMoves(u64 b)
+{
+  return (b >> 8 & empty) | ((b & piece_start[side::white][piece::pawn]) >> 16 & empty)
+    | ((b >> 7 | b >> 9) & pieces_side[side::black]);
+}
+
+u64 board::genBlackPawnMoves(u64 b)
+{
+  return (b << 8 & empty) | ((b & piece_start[side::black][piece::pawn]) << 16 & empty)
+    | ((b << 7 | b << 9) & pieces_side[side::white]);
+}
+
 u64 board::genPawnMoves(u64 b, side s)
 {
-  return ((s == side::white ? b >> 8 : b << 8) & empty) | ((s == side::white ? (b & pawn_start[s]) >> 16 : (b & pawn_start[s] << 16)) & empty) 
-    | ((s == side::white ? (b >> 7 | b >> 9) : (b << 7 | b << 9)) & pieces_side[(s == side::white ? side::black : side::white)]);
+  return s == side::white ? genWhitePawnMoves(b) : genBlackPawnMoves(b);
 }
 
 u64 board::traceRay(u64 bitboard, int direction, bool left, u64 boundary, side s)
@@ -247,10 +297,21 @@ u64 board::genQueenMoves(u64 b, side s)
   return genRookMoves(b, s) | genBishopMoves(b, s);
 }
 
+u64 board::genCastlingMoves(u64 b, side s)
+{
+  u64 result = 0;
+  if (canCastle[s][queenside] && (b >> 1 & empty) && (b >> 2 & empty) && (b >> 3 & empty))
+    result |= b >> 2;
+  if (canCastle[s][kingside] && (b << 1 & empty) && (b << 2 & empty))
+    result |= b << 2;
+  
+  return result;
+}
+
 u64 board::genKingMoves(u64 b, side s)
 {
-  return (b << 1 | b << 8 | b << 9 | b << 7 | b >> 1 | b >> 8 | b >> 9 | b >> 7) 
-    & ~pieces_side[s];
+  return genCastlingMoves(b, s) | ((b << 1 | b << 8 | b << 9 | b << 7 | b >> 1 
+  | b >> 8 | b >> 9 | b >> 7) & ~pieces_side[s]);
 }
 
 u64 board::genMoves(side s)
@@ -287,6 +348,8 @@ void board::genStartMoves(const start_pos &p)
     case piece::king:
       b = genKingMoves(p.loc, curPlayer);
       break;
+    default:
+      return;
   }
 
   printBitboard(b);

@@ -8,7 +8,7 @@ void board::printBitboard(u64 b)
 {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      std::cout << (b & 1);
+      std::cout << (b & 1) << ' ';
       b >>= 1;
     }
       
