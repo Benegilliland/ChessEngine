@@ -45,6 +45,9 @@ void engine::calcDiff(move &m)
 
   m.sign = sign;
   m.d = d;
+
+  if (m.start.pc == piece::pawn && m.end.pc == piece::none && (m.d == 7 || m.d == 9 || m.d == -9 || m.d == -7))
+    m.type = move_type::en_passant;
 }
 
 void engine::showAvailableMoves(const start_pos &p)
@@ -63,6 +66,7 @@ move engine::getMove()
     showAvailableMoves(m.start);
     m.end = getEndPos();
     calcDiff(m);
+
     validMove = b.validateMove(m);
   }
 

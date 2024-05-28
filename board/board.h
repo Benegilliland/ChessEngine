@@ -39,11 +39,14 @@ struct end_pos {
   u64 loc;
 };
 
+enum class move_type {normal, queenside_castle, kingside_castle, en_passant};
+
 struct move {
   start_pos start;
   end_pos end;
   int d;
   int sign;
+  move_type type = move_type::normal;
 };
 
 struct gamestate {
@@ -86,6 +89,7 @@ private:
   void resetPieces();
   start_pos locToStartPos(u64);
   void setPiecesSide();
+  bool validateEnPassant(const move &);
   bool validatePawnMove(const move &);
   bool validateRookMove(const move &);
   bool validateBishopMove(const move &);
@@ -100,6 +104,7 @@ private:
   u64 traceRay(u64, int, bool, u64, side);
   u64 genWhitePawnMoves(u64);
   u64 genBlackPawnMoves(u64);
+  u64 genEnPassantMoves(u64, side);
   u64 genPawnMoves(u64, side);
   u64 genRookMoves(u64, side);  
   u64 genBishopMoves(u64, side);

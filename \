@@ -1,8 +1,8 @@
 #include "board.h"
 
 // Pawn upgrades
-// Pawn move generation is buggy
 // Knight move generation/validation is buggy (add boundaries)
+// Add en passant
 // Add draw by repetition
 // Add draw by insufficient material
 // Move generation should check for valid moves
@@ -292,17 +292,9 @@ u64 board::genBlackPawnMoves(u64 b)
     | ((b << 7 | b << 9) & pieces_side[side::white]);
 }
 
-u64 board::genEnPassantMoves(u64 b, side s)
+u64 board::genEnPassantMoves(u64 b)
 {
-  if (move_history.empty()) return false;
-  move prev = move_history.front().m;
 
-  if (s == side::white && prev.d == -16)
-    return ((b >> 1 | b << 1) & pieces[side::black][piece::pawn]) >> 8;
-  if (s == side::black && prev.d == 16)
-    return ((b >> 1 | b << 1) & pieces[side::white][piece::pawn]) << 8;
-
-  return 0;
 }
 
 u64 board::genPawnMoves(u64 b, side s)
