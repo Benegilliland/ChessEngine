@@ -46,6 +46,11 @@ struct move {
   int sign;
 };
 
+struct gamestate {
+  move m;
+  int fiftyMoveCounter;
+};
+
 class board {
 private:
   static const int NUM_SIDES = 2;
@@ -66,7 +71,8 @@ private:
   u64 empty;
   bool canCastle[NUM_SIDES][2];
   side curPlayer;
-  std::list<move> move_history;
+  std::list<gamestate> move_history;
+  int fiftyMoveCounter;
 
   // Console functions
   void printBitboard(u64);
@@ -116,6 +122,6 @@ public:
   bool validateMove(const move &);
   void switchPlayer();
   void genStartMoves(const start_pos &);
-  bool playerCanMove();
+  bool gameOver();
   bool inCheck();
 };

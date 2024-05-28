@@ -88,7 +88,7 @@ void engine::run()
     doMove(m);
     switchPlayer();
 
-    if (!b.playerCanMove()) {
+    if (b.gameOver()) {
       std::cout << (b.inCheck() ? "Checkmate" : "Stalemate") << "\n";
       sleep(5);
       break;

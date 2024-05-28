@@ -1,5 +1,6 @@
 #include "board.h"
 
+// Pawn upgrades
 // Knight move generation/validation is buggy (add boundaries)
 // Add en passant
 // Add draw by repetition
@@ -13,6 +14,7 @@ void board::reset()
   curPlayer = side::white;
   canCastle[side::white][queenside] = canCastle[side::white][kingside]
     = canCastle[side::black][queenside] = canCastle[side::black][kingside] = true;
+  fiftyMoveCounter = 0;
 }
 
 void board::resetPieces()
@@ -74,13 +76,22 @@ void board::doMove(const move &m)
     canCastle[curPlayer][side] = false;
   }
 
-  move_history.push_front(m);
+  move_history.push_front(gamestate{m, fiftyMoveCounter});
+
+  if (m.end.pc == piece::none && m.start.pc != piece::pawn)
+    fiftyMoveCounter++;
+  else
+    fiftyMoveCounter = 0;
+
+  std::cout << "Fifty move counter: " << fiftyMoveCounter << "\n";
 }
 
 void board::undoLastMove() {
-  move m = move_history.front();
-  movePieces(m);
+  gamestate history = move_history.front();
   move_history.pop_front();
+
+  movePieces(history.m);
+  fiftyMoveCounter = history.fiftyMoveCounter;
 }
 
 side board::getOpponent()
@@ -236,7 +247,6 @@ bool board::validateMove(const move &m)
       break;
     case piece::king:
       valid = validateKingMove(m);
-      std::cout << "Hmm: " << valid << "\n";
       break;
     default:
       return false;
@@ -372,7 +382,7 @@ bool board::inCheck()
   return genMoves(getOpponent()) & pieces[curPlayer][piece::king];
 }
 
-bool board::playerCanMove()
+bool board::gameOver()
 {
-  return (genMoves(curPlayer) > 0);
+  return genMoves(curPlayer) == 0 || fiftyMoveCounter == 50;
 }
