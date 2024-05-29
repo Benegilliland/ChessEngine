@@ -322,7 +322,7 @@ bool board::hasAvailableMoves()
     start_pos p = locToStartPos(b);
 
     if (p.pc != piece::king) {
-      u64 available_moves;
+      u64 available_moves = 0;
 
       togglePiece(p, curPlayer);
 
@@ -488,17 +488,25 @@ bool board::inCheck()
   return genMoves(getOpponent()) & pieces[curPlayer][piece::king];
 }
 
-void board::checkInsufficientMaterial()
+// king vs king, king and bishop vs king, king and knight vs king, king and bishop vs and bishop on same coliur
+bool board::checkInsufficientMaterial()
 {
-  return;
+  return false;
 }
 
-void board::checkDrawRepetition()
+// threefold repetition - same player to move, same board position, same castling and en passant rules
+bool board::checkRepetitionDraw()
 {
-  return; 
+  return false;
+}
+
+bool board::checkFiftyMoveDraw()
+{
+  return fiftyMoveCounter >= 50;
 }
 
 bool board::gameOver()
 {
-  return !hasAvailableMoves() || fiftyMoveCounter == 50;
+  return !hasAvailableMoves() || checkFiftyMoveDraw() 
+      || checkInsufficientMaterial() || checkRepetitionDraw();
 }

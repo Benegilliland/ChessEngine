@@ -3,18 +3,21 @@
 
 typedef uint64_t u64;
 
+const int NUM_SIDES = 2;
+const int NUM_PIECES = 6;
+
 enum side : int {
   white = 0,
   black = 1,
 };
 
 enum piece : int {
-  pawn = 0,
-  knight = 1,
+  king = 0,
+  queen = 1,
   bishop = 2,
-  rook = 3,
-  queen = 4,
-  king =  5,
+  knight = 3,
+  rook = 4,
+  pawn =  5,
   none = 6,
 };
 

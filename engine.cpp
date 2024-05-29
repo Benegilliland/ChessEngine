@@ -1,5 +1,55 @@
 #include "engine.h"
 #include <unistd.h>
+#include <iostream>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
+engine::engine(bool gui_enabled, int width, int height)
+{
+  if (gui_enabled)
+    init_gui(width, height);
+}
+
+engine::~engine()
+{
+  if (gui)
+    destroy_gui();
+}
+
+void engine::init_gui(int width, int height)
+{
+  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    std::cout << "Error: unable to initialise SDL\n";
+    return;
+  }
+
+  if ((window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      width, height, 0)) == NULL) {
+    std::cout << "Error: unable to create window\n";
+    return;
+  }
+
+  if ((renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)) == NULL) {
+    std::cout << "Error: unable to create renderer\n";
+    return;
+  }
+
+  if (IMG_Init(IMG_INIT_PNG) == 0) {
+    std::cout << "Error: unable to initialise SDL Image\n";
+    return;
+  }
+
+  gui = new g_gui(renderer, width, height);
+}
+
+void engine::destroy_gui()
+{
+  delete gui;
+  IMG_Quit();
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
 
 void engine::reset()
 {
@@ -12,7 +62,12 @@ start_pos engine::getStartPos()
   bool validPos = false;
 
   while (!validPos) {
-    p = b.getStartPos();
+    /*if (gui)
+      p = gui->getStartPos();
+    else*/
+      //p = b.getStartPos();
+    p = gui->getStartPos();
+
     validPos = b.validateStartPos(p);
   }
 
@@ -106,7 +161,7 @@ void engine::run()
 
 int main(int argc, char *argv[])
 {
-  engine chess;
+  engine chess(true, 800, 800);
   chess.run();
   return 0;
 } 

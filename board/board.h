@@ -1,5 +1,5 @@
 #pragma once
-#include "common.h"
+#include "../common.h"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -67,8 +67,9 @@ private:
   u64 genMoves(side);
   void togglePiece(const start_pos &, side);
   //u64 genValidatedMoves(const pos &, u64);
-  void checkInsufficientMaterial();
-  void checkDrawRepetition();
+  bool checkFiftyMoveDraw();
+  bool checkInsufficientMaterial();
+  bool checkRepetitionDraw();
 
 public:
   void reset();
