@@ -6,7 +6,7 @@
 
 class g_spritehandler {
 private:
-  static constexpr char *spritesheet_file = "images/spritesheet.png";
+  const char *spritesheet_file = "images/spritesheet.png";
   static const int NUM_RANKS = 8;
   static const int NUM_FILES = 8;
   SDL_Texture *spritesheet;

@@ -1,8 +1,10 @@
+#include "b_common.h"
 #include "board.h"
 #include <iostream>
 #include <string>
 
-// Here we define our functions for interacting with the board using the terminal instead of a GUI
+/* Here we define our functions for interacting with the board using
+   the terminal instead of a GUI*/
 
 void board::printBitboard(u64 b)
 {
@@ -11,14 +13,15 @@ void board::printBitboard(u64 b)
       std::cout << (b & 1) << ' ';
       b >>= 1;
     }
-      
+
     std::cout << '\n';
   }
+  std::cout << '\n';
 }
 
 char board::printPos(u64 pos)
 {
-  const char lookup[] = "PNBRQKpnbrqk";
+  const char lookup[] = "KQBNRPkqbnrp";
 
   for (int i = 0; i < NUM_SIDES; i++) {
     for (int j = 0; j < NUM_PIECES; j++) {
@@ -50,7 +53,7 @@ void board::print()
 
 bool board::validateInput(const std::string &input)
 {
-  if (input.length() != 2) 
+  if (input.length() != 2)
     return false;
 
   char rank = input[0];
@@ -71,7 +74,7 @@ std::string board::getValidInput(const std::string &cmd)
   while (true) {
     std::cout << cmd;
     std::cin >> input;
-    
+
     if (validateInput(input))
       break;
 
@@ -81,32 +84,24 @@ std::string board::getValidInput(const std::string &cmd)
   return input;
 }
 
-start_pos board::inputToStartPos(const std::string &input)
+s_pos board::inputToPos(const std::string &input)
 {
-  char rank = input[0];
-  char file = input[1];
-
-  int l = (rank - 'A') + 8 * ('8' - file);
-  u64 loc = (u64)1 << l;
-  return locToStartPos(loc);
+	char rank = input[0];
+	char file = input[1];
+	return {rank - 'A', '8' - file};
 }
 
-end_pos board::inputToEndPos(const std::string &input)
+s_pos board::getStartPos()
 {
-  start_pos p = inputToStartPos(input);
-  return end_pos{p.bitboard, p.pc, p.loc};
-}
-
-start_pos board::getStartPos()
-{
+  print();
   std::string input = getValidInput("Select a piece to move: ");
-  return inputToStartPos(input);
+  return inputToPos(input);
 }
 
-end_pos board::getEndPos()
+s_pos board::getEndPos()
 {
   std::string input = getValidInput("Select where to move: ");
-  return inputToEndPos(input);
+  return inputToPos(input);
 }
 
 move_type board::getPawnUpgradeType()

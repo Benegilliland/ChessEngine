@@ -16,6 +16,7 @@ engine::~engine()
     destroy_gui();
 }
 
+// Move to GUI file
 void engine::init_gui(int width, int height)
 {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -56,27 +57,28 @@ void engine::reset()
   b.reset();
 }
 
-start_pos engine::getStartPos()
+b_pos engine::getStartPos()
 {
-  start_pos p;
+  s_pos pos;
+  b_pos board_pos;
   bool validPos = false;
 
   while (!validPos) {
-    /*if (gui)
-      p = gui->getStartPos();
-    else*/
-      //p = b.getStartPos();
-    p = gui->getStartPos();
-
-    validPos = b.validateStartPos(p);
+    pos = gui ? gui->getStartPos() : b.getStartPos();
+    board_pos = b.getBoardPos(pos);
+    b.printBitboard(board_pos.loc);
+    validPos = b.validateStartPos(board_pos);
   }
 
-  return p;
+  return board_pos;
 }
 
-end_pos engine::getEndPos()
+b_pos engine::getEndPos()
 {
-  return b.getEndPos();
+	s_pos pos = gui ? gui->getEndPos() : b.getEndPos();
+	b_pos end = b.getBoardPos(pos);
+	b.printBitboard(end.loc);
+	return end;
 }
 
 void engine::calcDiff(move &m)
@@ -105,23 +107,22 @@ void engine::calcDiff(move &m)
     m.type = move_type::en_passant;
 }
 
-void engine::showAvailableMoves(const start_pos &p)
+void engine::showAvailableMoves(const b_pos &p)
 {
   b.printBitboard(b.genStartMoves(p));
 }
 
 move engine::getMove()
-{ 
+{
   bool validMove = false;
   move m;
 
   while (!validMove) {
-    b.print();
     m.start = getStartPos();
     showAvailableMoves(m.start);
     m.end = getEndPos();
     calcDiff(m);
-    
+
     // Pawn
     if (m.start.pc == piece::pawn && (m.end.loc & 0xFF000000000000FF))
       m.type = b.getPawnUpgradeType();
@@ -164,4 +165,4 @@ int main(int argc, char *argv[])
   engine chess(true, 800, 800);
   chess.run();
   return 0;
-} 
+}

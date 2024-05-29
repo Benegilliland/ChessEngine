@@ -1,3 +1,4 @@
+#include "b_common.h"
 #include "board.h"
 
 // Add draw by repetition
@@ -30,26 +31,32 @@ void board::setPiecesSide()
     for (int p = 0; p < NUM_PIECES; p++) {
       pieces_side[s] |= pieces[s][p];
     }
-  }   
+  }
 
   empty = ~(pieces_side[side::white] | pieces_side[side::black]);
 }
 
-start_pos board::locToStartPos(u64 loc)
+b_pos board::getBoardPos(s_pos p)
+{
+	u64 loc = (u64)1 << (p.file * 8 + p.rank);
+	return getBoardPos(loc);
+}
+
+b_pos board::getBoardPos(u64 loc)
 {
   for (int s = 0; s < NUM_SIDES; s++)
-    for (int p = 0; p < NUM_PIECES; p++) 
+    for (int p = 0; p < NUM_PIECES; p++)
       if (pieces[s][p] & loc)
-        return start_pos{&pieces[s][p], (piece)p, loc};
+        return {&pieces[s][p], (piece)p, loc};
 
-  return start_pos{nullptr, piece::none, loc};
+  return {nullptr, piece::none, loc};
 }
 
 void board::movePieces(const move &m)
 {
   *m.start.bitboard ^= (m.start.loc | m.end.loc);
   if (m.end.bitboard) *m.end.bitboard ^= m.end.loc;
-  
+
   // Castling
   if (m.start.pc == piece::king && (m.d == 2 || m.d == -2)) {
     if (m.end.loc << 1 & pieces[curPlayer][piece::rook])
@@ -90,7 +97,7 @@ void board::movePieces(const move &m)
 void board::doMove(const move &m)
 {
   movePieces(m);
-  
+
   if (m.start.loc == piece_start[curPlayer][piece::king])
     canCastle[curPlayer][queenside] = canCastle[curPlayer][kingside] = false;
 
@@ -123,7 +130,7 @@ side board::getOpponent()
   return (curPlayer == side::white ? side::black : side::white);
 }
 
-bool board::validateStartPos(const start_pos &p)
+bool board::validateStartPos(const b_pos &p)
 {
   return p.loc > 0 && p.bitboard != nullptr && *p.bitboard & pieces_side[curPlayer];
 }
@@ -162,12 +169,12 @@ bool board::validatePawnMove(const move &m)
 bool board::validateRookMove(const move &m)
 {
   int d = (m.d > 0 ? m.d : -m.d);
-  
+
   if (d < 8)
     return checkCollision(m, m.sign, (m.sign > 0 ? left_boundary : right_boundary));
   if (d % 8 == 0)
     return checkCollision(m, 8 * m.sign, 0);
-  
+
   return false;
 }
 
@@ -214,7 +221,7 @@ bool board::validateKingsideCastling(const move &m, u64 mask, u64 enemy_moves)
 
 bool board::validateCastling(const move &m)
 {
-  u64 mask = (curPlayer == side::white) ? 0xFF00000000000000 : 0x00000000000000FF;  
+  u64 mask = (curPlayer == side::white) ? 0xFF00000000000000 : 0x00000000000000FF;
   u64 enemy_moves = genMoves(getOpponent()) & mask;
 
   return validateQueensideCastling(m, mask, enemy_moves) || validateKingsideCastling(m, mask, enemy_moves);
@@ -223,7 +230,7 @@ bool board::validateCastling(const move &m)
 bool board::validateKingMove(const move &m)
 {
   int d = (m.d > 0 ? m.d : -m.d);
-  
+
   if (d == 2)
     return validateCastling(m);
 
@@ -291,18 +298,8 @@ bool board::validateMove(const move &m)
 
   return valid;
 }
-/*
-u64 board::genValidatedMoves(const pos &p, u64 enemy_moves)
-{
-  u64 potential_moves = genStartMoves(p);
-  
-  if (p.pc == piece::king) 
-    potential_moves &= ~enemy_moves;
 
-
-}*/
-
-void board::togglePiece(const start_pos &p, side s)
+void board::togglePiece(const b_pos &p, side s)
 {
   *p.bitboard ^= p.loc;
   pieces_side[s] ^= p.loc;
@@ -319,7 +316,7 @@ bool board::hasAvailableMoves()
       continue;
     }
 
-    start_pos p = locToStartPos(b);
+    b_pos p = getBoardPos(b);
 
     if (p.pc != piece::king) {
       u64 available_moves = 0;
@@ -328,10 +325,10 @@ bool board::hasAvailableMoves()
 
       if (!inCheck())
         available_moves = genStartMoves(p);
-      
+
       togglePiece(p, curPlayer);
-      
-      if (available_moves > 0) 
+
+      if (available_moves > 0)
         return true;
     }
     else {
@@ -340,10 +337,10 @@ bool board::hasAvailableMoves()
       u64 enemy_moves = genMoves(getOpponent());
       togglePiece(p, curPlayer);
 
-      if ((king_moves & ~enemy_moves) > 0) 
+      if ((king_moves & ~enemy_moves) > 0)
         return true;
     }
-    
+
     b <<= 1;
   }
 
@@ -371,12 +368,12 @@ u64 board::genEnPassantMoves(u64 b, side s)
 {
   if (move_history.empty()) return false;
   move prev = move_history.front().m;
- 
+
   if (s == side::white && prev.d == -16)
-    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary)) 
+    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary))
       & pieces[side::black][piece::pawn]) >> 8;
   if (s == side::black && prev.d == 16)
-    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary)) 
+    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary))
       & pieces[side::white][piece::pawn]) << 8;
 
   return 0;
@@ -432,13 +429,13 @@ u64 board::genCastlingMoves(u64 b, side s)
     result |= b >> 2;
   if (canCastle[s][kingside] && (b << 1 & empty) && (b << 2 & empty))
     result |= b << 2;
-  
+
   return result;
 }
 
 u64 board::genKingMoves(u64 b, side s)
 {
-  return genCastlingMoves(b, s) | ((b << 1 | b << 8 | b << 9 | b << 7 | b >> 1 
+  return genCastlingMoves(b, s) | ((b << 1 | b << 8 | b << 9 | b << 7 | b >> 1
   | b >> 8 | b >> 9 | b >> 7) & ~pieces_side[s]);
 }
 
@@ -453,13 +450,14 @@ u64 board::genMoves(side s)
  return b;
 }
 
-u64 board::genStartMoves(const start_pos &p)
+u64 board::genStartMoves(const b_pos &p)
 {
   u64 b = 0;
 
   switch (p.pc) {
     case piece::pawn:
       b = genPawnMoves(p.loc, curPlayer);
+	std::cout << "Test\n";
       break;
     case piece::knight:
       b = genKnightMoves(p.loc, curPlayer);
@@ -507,6 +505,6 @@ bool board::checkFiftyMoveDraw()
 
 bool board::gameOver()
 {
-  return !hasAvailableMoves() || checkFiftyMoveDraw() 
+  return !hasAvailableMoves() || checkFiftyMoveDraw()
       || checkInsufficientMaterial() || checkRepetitionDraw();
 }

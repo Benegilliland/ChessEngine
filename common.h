@@ -3,14 +3,16 @@
 
 typedef uint64_t u64;
 
-const int NUM_SIDES = 2;
-const int NUM_PIECES = 6;
+static const int NUM_SIDES = 2;
+static const int NUM_PIECES = 6;
 
+// The order of these values is used implicitly by the spritesheet and terminal output
 enum side : int {
   white = 0,
   black = 1,
 };
 
+// The order of these values is used implicitly by the spritesheet and terminal output
 enum piece : int {
   king = 0,
   queen = 1,
@@ -21,43 +23,6 @@ enum piece : int {
   none = 6,
 };
 
-enum castling : int {
-  queenside = 0,
-  kingside = 1,
-};
-
-struct start_pos {
-  u64 *bitboard;
-  piece pc;
-  u64 loc;
-};
-
-struct end_pos {
-  u64 *bitboard;
-  piece pc;
-  u64 loc;
-};
-
-enum class move_type {
-  normal, 
-  queenside_castle, 
-  kingside_castle, 
-  en_passant, 
-  pawn_upgrade_queen, 
-  pawn_upgrade_rook, 
-  pawn_upgrade_knight, 
-  pawn_upgrade_bishop
-};
-
-struct move {
-  start_pos start;
-  end_pos end;
-  int d;
-  int sign;
-  move_type type = move_type::normal;
-};
-
-struct gamestate {
-  move m;
-  int fiftyMoveCounter;
+struct s_pos {
+	int rank, file;
 };

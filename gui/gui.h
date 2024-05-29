@@ -7,6 +7,7 @@
 
 class g_gui {
 private:
+  static const int sleep_duration = 10000;
   SDL_Renderer *renderer;
   g_bg bg;
   g_spritehandler spritehandler;
@@ -16,5 +17,6 @@ public:
   g_gui(SDL_Renderer *, int, int);
   ~g_gui();
   void draw();
-  start_pos getStartPos();
+  s_pos getStartPos();
+  s_pos getEndPos();
 };
