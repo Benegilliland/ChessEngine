@@ -1,6 +1,7 @@
 #include "board.h"
 
 // Pawn move generation is buggy
+// Knight move generation/validation is buggy (add boundaries)
 // Add draw by repetition
 // Add draw by insufficient material
 
@@ -410,11 +411,8 @@ u64 board::genBishopMoves(u64 b, side s)
 
 u64 board::genKnightMoves(u64 b, side s)
 {
-  return (((b << 10 | b >> 6) & ~right_boundary_knight)
-      | ((b << 17 | b >> 15) & ~left_boundary)
-      | ((b << 6 | b >> 10) & ~left_boundary_knight)
-      | ((b << 15 | b >> 17) & ~right_boundary))
-      & ~pieces_side[s];
+  return (b << 10 | b << 6 | b << 15 | b << 17 | b >> 10 | b >> 6 | b >> 15 | b >> 17) 
+    & ~pieces_side[s];
 }
 
 u64 board::genQueenMoves(u64 b, side s)
@@ -477,7 +475,7 @@ u64 board::genStartMoves(const start_pos &p)
       return 0;
   }
 
-  printBitboard(b);
+  //printBitboard(b);
   return b;
 }
 

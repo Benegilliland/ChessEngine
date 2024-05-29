@@ -20,6 +20,8 @@ private:
   
   static const u64 right_boundary = 0x8080808080808080;
   static const u64 left_boundary = 0x101010101010101;
+  static const u64 left_boundary_knight = 0xC0C0C0C0C0C0C0C0;
+  static const u64 right_boundary_knight = 0x0303030303030303;
   u64 pieces[NUM_SIDES][NUM_PIECES];
   u64 pieces_side[NUM_SIDES];
   u64 empty;
