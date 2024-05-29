@@ -66,6 +66,10 @@ move engine::getMove()
     showAvailableMoves(m.start);
     m.end = getEndPos();
     calcDiff(m);
+    
+    // Pawn
+    if (m.start.pc == piece::pawn && (m.end.loc & 0xFF000000000000FF))
+      m.type = b.getPawnUpgradeType();
 
     validMove = b.validateMove(m);
   }

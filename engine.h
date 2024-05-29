@@ -1,3 +1,5 @@
+#pragma once
+#include "board/common.h"
 #include "board/board.h"
 
 class engine {

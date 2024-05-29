@@ -1,6 +1,5 @@
 #include "board.h"
 
-// Pawn upgrades
 // Pawn move generation is buggy
 // Knight move generation/validation is buggy (add boundaries)
 // Add draw by repetition
@@ -32,7 +31,7 @@ void board::setPiecesSide()
     for (int p = 0; p < NUM_PIECES; p++) {
       pieces_side[s] |= pieces[s][p];
     }
-  }
+  }   
 
   empty = ~(pieces_side[side::white] | pieces_side[side::black]);
 }
@@ -66,6 +65,24 @@ void board::movePieces(const move &m)
       pieces[side::black][piece::pawn] ^= m.end.loc << 8;
     else
       pieces[side::white][piece::pawn] ^= m.end.loc >> 8;
+  }
+
+  // Pawn upgrades
+  if (m.type == move_type::pawn_upgrade_queen) {
+    pieces[curPlayer][piece::pawn] ^= m.end.loc;
+    pieces[curPlayer][piece::queen] ^= m.end.loc;
+  }
+  else if (m.type == move_type::pawn_upgrade_rook) {
+    pieces[curPlayer][piece::pawn] ^= m.end.loc;
+    pieces[curPlayer][piece::rook] ^= m.end.loc;
+  }
+  else if (m.type == move_type::pawn_upgrade_knight) {
+    pieces[curPlayer][piece::pawn] ^= m.end.loc;
+    pieces[curPlayer][piece::knight] ^= m.end.loc;
+  }
+  else if (m.type == move_type::pawn_upgrade_bishop) {
+    pieces[curPlayer][piece::pawn] ^= m.end.loc;
+    pieces[curPlayer][piece::bishop] ^= m.end.loc;
   }
 
   setPiecesSide();
@@ -275,6 +292,12 @@ bool board::validateMove(const move &m)
   return valid;
 }
 
+std::vector<move> getAvailableMoves(side s)
+{
+  // to do
+  return;
+}
+
 void board::switchPlayer()
 {
   curPlayer = getOpponent();
@@ -313,11 +336,10 @@ u64 board::genPawnMoves(u64 b, side s)
 u64 board::traceRay(u64 bitboard, int direction, bool left, u64 boundary, side s)
 {
   u64 result = bitboard, ray = bitboard;
-  boundary = ~boundary;
-  //u64 not_enemy_pieces = pieces_side[s] | empty;
+  u64 not_pieces = ~pieces_side[s] & ~boundary;
 
   for (int i = 1; i < 8; i++) {
-    ray = (left ? ray << direction : ray >> direction) & boundary & ~pieces_side[s];
+    ray = (left ? ray << direction : ray >> direction) & not_pieces;
     result |= ray;
     ray &= empty;
   }
@@ -411,5 +433,5 @@ bool board::inCheck()
 
 bool board::gameOver()
 {
-  return genMoves(curPlayer) == 0 || fiftyMoveCounter == 50;
+  return genAvailableMoves(curPlayer).empty() || fiftyMoveCounter == 50;
 }

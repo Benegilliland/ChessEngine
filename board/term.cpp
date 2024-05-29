@@ -108,3 +108,31 @@ end_pos board::getEndPos()
   std::string input = getValidInput("Select where to move: ");
   return inputToEndPos(input);
 }
+
+move_type board::getPawnUpgradeType()
+{
+  char c = '\0';
+
+  while (c != 'Q' && c != 'B' && c != 'R' && c != 'N') {
+    std::cout << "Enter pawn upgrade type: ";
+    std::cin >> c;
+  }
+
+  switch (c) {
+    case 'Q':
+      return move_type::pawn_upgrade_queen;
+      break;
+    case 'B':
+      return move_type::pawn_upgrade_bishop;
+      break;
+    case 'R':
+      return move_type::pawn_upgrade_rook;
+      break;
+    case 'N':
+      return move_type::pawn_upgrade_knight;
+      break;
+    default:
+      return move_type::normal;
+      break;
+  }
+}

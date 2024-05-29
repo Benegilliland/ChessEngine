@@ -1,58 +1,9 @@
 #pragma once
-#include <cstdint>
+#include "common.h"
 #include <string>
 #include <iostream>
 #include <vector>
 #include <list>
-
-typedef uint64_t u64;
-
-enum side : int {
-  white = 0,
-  black = 1,
-};
-
-enum piece : int {
-  pawn = 0,
-  knight = 1,
-  bishop = 2,
-  rook = 3,
-  queen = 4,
-  king =  5,
-  none = 6,
-};
-
-enum castling : int {
-  queenside = 0,
-  kingside = 1,
-};
-
-struct start_pos {
-  u64 *bitboard;
-  piece pc;
-  u64 loc;
-};
-
-struct end_pos {
-  u64 *bitboard;
-  piece pc;
-  u64 loc;
-};
-
-enum class move_type {normal, queenside_castle, kingside_castle, en_passant};
-
-struct move {
-  start_pos start;
-  end_pos end;
-  int d;
-  int sign;
-  move_type type = move_type::normal;
-};
-
-struct gamestate {
-  move m;
-  int fiftyMoveCounter;
-};
 
 class board {
 private:
@@ -118,7 +69,8 @@ public:
   void reset();
   void print();
   start_pos getStartPos();
-  end_pos getEndPos();  
+  end_pos getEndPos();
+  move_type getPawnUpgradeType();
   move getMove();
   void movePieces(const move &);
   void doMove(const move &);
@@ -127,6 +79,7 @@ public:
   bool validateMove(const move &);
   void switchPlayer();
   void genStartMoves(const start_pos &);
+  std::vector<move> getAvailableMoves(side);
   bool gameOver();
   bool inCheck();
 };
