@@ -31,7 +31,6 @@ private:
   int fiftyMoveCounter;
 
   // Console functions
-  void printBitboard(u64);
   char printPos(u64);
   bool validateInput(const std::string &);
   std::string getValidInput(const std::string &);
@@ -73,6 +72,7 @@ private:
 
 public:
   void reset();
+  void printBitboard(u64);
   void print();
   start_pos getStartPos();
   end_pos getEndPos();

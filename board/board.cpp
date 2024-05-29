@@ -1,8 +1,9 @@
 #include "board.h"
 
-// Pawn move generation is buggy
 // Add draw by repetition
 // Add draw by insufficient material
+// Proper (possible automated) testing
+// GUI
 
 void board::reset()
 {
@@ -357,24 +358,26 @@ void board::switchPlayer()
 u64 board::genWhitePawnMoves(u64 b)
 {
   return (b >> 8 & empty) | ((b & piece_start[side::white][piece::pawn]) >> 16 & empty)
-    | ((b >> 7 | b >> 9) & pieces_side[side::black]);
+    | (((b >> 7 & ~left_boundary) | (b >> 9 & ~right_boundary)) & pieces_side[side::black]);
 }
 
 u64 board::genBlackPawnMoves(u64 b)
 {
   return (b << 8 & empty) | ((b & piece_start[side::black][piece::pawn]) << 16 & empty)
-    | ((b << 7 | b << 9) & pieces_side[side::white]);
+    | (((b << 7 & ~right_boundary) | (b << 9 & ~left_boundary)) & pieces_side[side::white]);
 }
 
 u64 board::genEnPassantMoves(u64 b, side s)
 {
   if (move_history.empty()) return false;
   move prev = move_history.front().m;
-
+ 
   if (s == side::white && prev.d == -16)
-    return ((b >> 1 | b << 1) & pieces[side::black][piece::pawn]) >> 8;
+    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary)) 
+      & pieces[side::black][piece::pawn]) >> 8;
   if (s == side::black && prev.d == 16)
-    return ((b >> 1 | b << 1) & pieces[side::white][piece::pawn]) << 8;
+    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary)) 
+      & pieces[side::white][piece::pawn]) << 8;
 
   return 0;
 }
@@ -447,7 +450,7 @@ u64 board::genMoves(side s)
   b |= genBishopMoves(pieces[s][piece::bishop], s);
   b |= genQueenMoves(pieces[s][piece::queen], s);
   b |= genKingMoves(pieces[s][piece::king], s);
-  return b;
+ return b;
 }
 
 u64 board::genStartMoves(const start_pos &p)
@@ -477,7 +480,6 @@ u64 board::genStartMoves(const start_pos &p)
       return 0;
   }
 
-  printBitboard(b);
   return b;
 }
 

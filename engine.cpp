@@ -52,7 +52,7 @@ void engine::calcDiff(move &m)
 
 void engine::showAvailableMoves(const start_pos &p)
 {
-  b.genStartMoves(p);
+  b.printBitboard(b.genStartMoves(p));
 }
 
 move engine::getMove()
