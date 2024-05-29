@@ -100,14 +100,15 @@ void board::doMove(const move &m)
     canCastle[curPlayer][side] = false;
   }
 
+  if (m.end.pc != piece::none)
+    checkInsufficientMaterial();
+
   move_history.push_front(gamestate{m, fiftyMoveCounter});
 
   if (m.end.pc == piece::none && m.start.pc != piece::pawn)
     fiftyMoveCounter++;
   else
     fiftyMoveCounter = 0;
-
-  std::cout << "Fifty move counter: " << fiftyMoveCounter << "\n";
 }
 
 void board::undoLastMove() {
@@ -291,11 +292,63 @@ bool board::validateMove(const move &m)
 
   return valid;
 }
-
-std::vector<move> getAvailableMoves(side s)
+/*
+u64 board::genValidatedMoves(const pos &p, u64 enemy_moves)
 {
-  // to do
-  return;
+  u64 potential_moves = genStartMoves(p);
+  
+  if (p.pc == piece::king) 
+    potential_moves &= ~enemy_moves;
+
+
+}*/
+
+void board::togglePiece(const start_pos &p, side s)
+{
+  *p.bitboard ^= p.loc;
+  pieces_side[s] ^= p.loc;
+  empty ^= p.loc;
+}
+
+bool board::hasAvailableMoves()
+{
+  u64 b = 1;
+
+  while (b > 0) {
+    if ((b & pieces_side[curPlayer]) == 0) {
+      b <<= 1;
+      continue;
+    }
+
+    start_pos p = locToStartPos(b);
+
+    if (p.pc != piece::king) {
+      u64 available_moves;
+
+      togglePiece(p, curPlayer);
+
+      if (!inCheck())
+        available_moves = genStartMoves(p);
+      
+      togglePiece(p, curPlayer);
+      
+      if (available_moves > 0) 
+        return true;
+    }
+    else {
+      u64 king_moves = genKingMoves(p.loc, curPlayer);
+      togglePiece(p, curPlayer);
+      u64 enemy_moves = genMoves(getOpponent());
+      togglePiece(p, curPlayer);
+
+      if ((king_moves & ~enemy_moves) > 0) 
+        return true;
+    }
+    
+    b <<= 1;
+  }
+
+  return false;
 }
 
 void board::switchPlayer()
@@ -335,16 +388,16 @@ u64 board::genPawnMoves(u64 b, side s)
 
 u64 board::traceRay(u64 bitboard, int direction, bool left, u64 boundary, side s)
 {
-  u64 result = bitboard, ray = bitboard;
-  u64 not_pieces = ~pieces_side[s] & ~boundary;
+  u64 result = 0, ray = bitboard;
+  u64 mask = ~pieces_side[s] & ~boundary;
 
-  for (int i = 1; i < 8; i++) {
-    ray = (left ? ray << direction : ray >> direction) & not_pieces;
+  while (ray > 0) {
+    ray = (left ? ray << direction : ray >> direction) & mask;
     result |= ray;
     ray &= empty;
   }
 
-  return result ^ bitboard;
+  return result;
 }
 
 u64 board::genRookMoves(u64 b, side s)
@@ -396,7 +449,7 @@ u64 board::genMoves(side s)
   return b;
 }
 
-void board::genStartMoves(const start_pos &p)
+u64 board::genStartMoves(const start_pos &p)
 {
   u64 b = 0;
 
@@ -420,10 +473,11 @@ void board::genStartMoves(const start_pos &p)
       b = genKingMoves(p.loc, curPlayer);
       break;
     default:
-      return;
+      return 0;
   }
 
-  printBitboard(b);
+  //printBitboard(b);
+  return b;
 }
 
 bool board::inCheck()
@@ -431,7 +485,17 @@ bool board::inCheck()
   return genMoves(getOpponent()) & pieces[curPlayer][piece::king];
 }
 
+void board::checkInsufficientMaterial()
+{
+  return;
+}
+
+void board::checkDrawRepetition()
+{
+  return; 
+}
+
 bool board::gameOver()
 {
-  return genAvailableMoves(curPlayer).empty() || fiftyMoveCounter == 50;
+  return !hasAvailableMoves() || fiftyMoveCounter == 50;
 }

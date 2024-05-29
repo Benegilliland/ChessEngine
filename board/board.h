@@ -64,6 +64,10 @@ private:
   u64 genCastlingMoves(u64, side);
   u64 genKingMoves(u64, side);
   u64 genMoves(side);
+  void togglePiece(const start_pos &, side);
+  //u64 genValidatedMoves(const pos &, u64);
+  void checkInsufficientMaterial();
+  void checkDrawRepetition();
 
 public:
   void reset();
@@ -78,8 +82,8 @@ public:
   bool validateStartPos(const start_pos &);
   bool validateMove(const move &);
   void switchPlayer();
-  void genStartMoves(const start_pos &);
-  std::vector<move> getAvailableMoves(side);
+  u64 genStartMoves(const start_pos &);
+  bool hasAvailableMoves();
   bool gameOver();
   bool inCheck();
 };
