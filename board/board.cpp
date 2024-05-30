@@ -16,6 +16,7 @@ void board::reset()
   canCastle[side::white][queenside] = canCastle[side::white][kingside]
     = canCastle[side::black][queenside] = canCastle[side::black][kingside] = true;
   fiftyMoveCounter = 0;
+  enPassant = 0;
 }
 
 void board::resetPieces()
@@ -108,11 +109,12 @@ void board::doMove(const move &m)
     canCastle[curPlayer][side] = false;
   }
 
-  if (m.start.pc == piece::pawn) {
-	std::cout << "m.d " << m.d << "\n";
-	if (m.d == 16) enPassant = m.start.loc >> 8;
-	else if (m.d == -16) enPassant = m.start.loc << 8;
-  }
+  if (m.start.pc == piece::pawn && m.d == 16)
+	enPassant = m.start.loc >> 8;
+  else if (m.start.pc == piece::pawn && m.d == -16)
+	enPassant = m.start.loc << 8;
+  else
+	enPassant = 0;
 
   move_history.push_front(gamestate{m, fiftyMoveCounter});
 
@@ -191,33 +193,18 @@ void board::switchPlayer()
 u64 board::genWhitePawnMoves(u64 b)
 {
   return (b >> 8 & empty) | ((b & piece_start[side::white][piece::pawn]) >> 16 & empty)
-    | (((b >> 7 & ~left_boundary) | (b >> 9 & ~right_boundary)) & pieces_side[side::black]);
+    | (((b >> 7 & ~left_boundary) | (b >> 9 & ~right_boundary)) & (pieces_side[side::black] | enPassant));
 }
 
 u64 board::genBlackPawnMoves(u64 b)
 {
   return (b << 8 & empty) | ((b & piece_start[side::black][piece::pawn]) << 16 & empty)
-    | (((b << 7 & ~right_boundary) | (b << 9 & ~left_boundary)) & pieces_side[side::white]);
-}
-
-u64 board::genEnPassantMoves(u64 b, side s)
-{
-  if (move_history.empty()) return false;
-  move prev = move_history.front().m;
-
-  if (s == side::white && prev.d == -16)
-    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary))
-      & pieces[side::black][piece::pawn]) >> 8;
-  if (s == side::black && prev.d == 16)
-    return (((b >> 1 & ~right_boundary) | (b << 1 & ~left_boundary))
-      & pieces[side::white][piece::pawn]) << 8;
-
-  return 0;
+    | (((b << 7 & ~right_boundary) | (b << 9 & ~left_boundary)) & (pieces_side[side::white] | enPassant));
 }
 
 u64 board::genPawnMoves(u64 b, side s)
 {
-  return (s == side::white ? genWhitePawnMoves(b) : genBlackPawnMoves(b)) | genEnPassantMoves(b, s);
+  return (s == side::white ? genWhitePawnMoves(b) : genBlackPawnMoves(b));
 }
 
 u64 board::traceRay(u64 bitboard, int direction, bool left, u64 boundary, side s)

@@ -45,7 +45,6 @@ private:
   u64 traceRay(u64, int, bool, u64, side);
   u64 genWhitePawnMoves(u64);
   u64 genBlackPawnMoves(u64);
-  u64 genEnPassantMoves(u64, side);
   u64 genPawnMoves(u64, side);
   u64 genRookMoves(u64, side);
   u64 genBishopMoves(u64, side);

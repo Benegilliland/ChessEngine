@@ -3,8 +3,8 @@
 int main(int argc, char *argv[])
 {
 	bool gui_enabled = true;
-	int width = 1000;
-	int height = 1000;
+	int width = 800;
+	int height = 800;
 
 	engine chess(gui_enabled, width, height);
 	chess.run();
