@@ -13,6 +13,7 @@ private:
   g_spritehandler spritehandler;
   g_eventhandler eventhandler;
   s_pos bitboardPosition(u64);
+  int tile_width, tile_height;
 
 public:
   g_gui(SDL_Renderer *, int, int);
@@ -27,5 +28,5 @@ public:
   void doEnPassant(u64);
   void doKingsideCastle(u64);
   void doQueensideCastle(u64);
-  piece getPawnUpgrade();
+  piece getPawnUpgrade(u64);
 };

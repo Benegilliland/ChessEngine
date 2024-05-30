@@ -12,4 +12,6 @@ public:
   s_pos mouseToBoard(const SDL_Event &);
   bool getStartPos(s_pos &, SDL_Point &pt);
   bool getEndPos(s_pos &, SDL_Point &);
+  bool getMenuPiece(const s_pos &, piece &pc, const SDL_Event &);
+  bool getPawnUpgrade(const s_pos &, piece &pc);
 };

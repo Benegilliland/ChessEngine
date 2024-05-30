@@ -6,6 +6,9 @@ g_gui::g_gui(SDL_Renderer *_renderer, int width, int height)
   : renderer(_renderer), bg(_renderer, width, height), spritehandler(_renderer, width, height),
 	eventhandler(width, height)
 {
+  tile_width = width / 8;
+  tile_height = height / 8;
+
   spritehandler.reset();
 }
 
@@ -108,7 +111,19 @@ void g_gui::doKingsideCastle(u64 end)
 	spritehandler.kingsideCastle(pos);
 }
 
-piece g_gui::getPawnUpgrade()
+piece g_gui::getPawnUpgrade(u64 bitboard)
 {
-	return piece::queen;
+	s_pos p = bitboardPosition(bitboard);
+	piece pc;
+	spritehandler.showPawnUpgrade(p);
+
+	while (true) {
+		if (eventhandler.getPawnUpgrade(p, pc)) {
+			spritehandler.hidePawnUpgrade();
+			return pc;
+		}
+
+		draw();
+		usleep(sleep_duration);
+	}
 }

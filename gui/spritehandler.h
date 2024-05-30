@@ -21,6 +21,7 @@ private:
   int tile_width, tile_height;
 
   bool showUpgradeMenu;
+  SDL_Color menuColor;
   SDL_Rect pawnUpgradeTiles[NUM_UPGRADES];
   g_sprite pawnUpgradePieces[NUM_UPGRADES];
 
@@ -41,5 +42,5 @@ public:
   void queensideCastle(const s_pos &);
   void kingsideCastle(const s_pos &);
   void showPawnUpgrade(const s_pos &);
-  void hidePawnUpgrade(const s_pos &);
+  void hidePawnUpgrade();
 };

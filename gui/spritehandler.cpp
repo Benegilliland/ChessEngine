@@ -22,6 +22,8 @@ void g_spritehandler::createSprites(SDL_Renderer *_renderer, int width, int heig
   for (int i = 0; i < NUM_UPGRADES; i++) {
 	pawnUpgradeTiles[i].w = tile_width;
 	pawnUpgradeTiles[i].h = tile_height;
+	SDL_Rect pos = {0, 0, tile_width, tile_height};
+	pawnUpgradePieces[i].create(_renderer, spritesheet, &pos);
   }
 }
 
@@ -59,8 +61,7 @@ void g_spritehandler::reset()
   sprites[4][0].setSrc(&piece_sources[side::white][piece::king]);
   sprites[4][7].setSrc(&piece_sources[side::black][piece::king]);
 
-  showUpgradeMenu = true;
-  showPawnUpgrade({3, 7});
+  showUpgradeMenu = false;
 }
 
 void g_spritehandler::setPiece(int pos, piece pc, side s)
@@ -114,8 +115,11 @@ void g_spritehandler::draw() {
   dragSprite.draw();
 
   if (showUpgradeMenu) {
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	SDL_SetRenderDrawColor(renderer, menuColor.r, menuColor.g, menuColor.b, SDL_ALPHA_OPAQUE);
 	SDL_RenderFillRects(renderer, pawnUpgradeTiles, NUM_UPGRADES);
+
+	for (int i = 0; i < NUM_UPGRADES; i++)
+		pawnUpgradePieces[i].draw();
   }
 }
 
@@ -175,6 +179,8 @@ void g_spritehandler::kingsideCastle(const s_pos &p)
 
 void g_spritehandler::showPawnUpgrade(const s_pos &p)
 {
+	showUpgradeMenu = true;
+
 	side s;
 	int y_direction, y_start_pos;
 	int x_start_pos = p.rank * tile_width;
@@ -183,15 +189,28 @@ void g_spritehandler::showPawnUpgrade(const s_pos &p)
 		s = side::white;
 		y_direction = tile_height;
 		y_start_pos = tile_height;
+		menuColor = {0, 0, 0};
 	}
 	else {
 		s = side::black;
 		y_direction = -tile_height;
 		y_start_pos = 6 * tile_height;
+		menuColor = {255, 255, 255};
 	}
 
 	for (int i = 0; i < 4; i++) {
 		pawnUpgradeTiles[i].x = x_start_pos;
 		pawnUpgradeTiles[i].y = y_start_pos + i * y_direction;
+		pawnUpgradePieces[i].setPos({x_start_pos, y_start_pos + i * y_direction});
 	}
+
+	pawnUpgradePieces[0].setSrc(&piece_sources[s][piece::queen]);
+	pawnUpgradePieces[1].setSrc(&piece_sources[s][piece::rook]);
+	pawnUpgradePieces[2].setSrc(&piece_sources[s][piece::knight]);
+	pawnUpgradePieces[3].setSrc(&piece_sources[s][piece::bishop]);
+}
+
+void g_spritehandler::hidePawnUpgrade()
+{
+	showUpgradeMenu = false;
 }

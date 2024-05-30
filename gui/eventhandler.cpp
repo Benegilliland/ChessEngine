@@ -54,3 +54,39 @@ bool g_eventhandler::getEndPos(s_pos &p, SDL_Point &pt)
 
 	return false;
 }
+
+bool g_eventhandler::getMenuPiece(const s_pos &p, piece &pc, const SDL_Event &e)
+{
+	s_pos clickPos = mouseToBoard(e);
+	if (clickPos.rank != p.rank) return false;
+
+	if (p.file == 0) {
+		if (clickPos.file < 1 || clickPos.file > 4) return false;
+		if (clickPos.file == 1) pc = piece::queen;
+		else if (clickPos.file == 2) pc = piece::rook;
+		else if (clickPos.file == 3) pc = piece::knight;
+		else pc = piece::bishop;
+		return true;
+	}
+	else {
+		if (clickPos.file > 6 || clickPos.file < 3) return false;
+		if (clickPos.file == 6) pc = piece::queen;
+		else if (clickPos.file == 5) pc = piece::rook;
+		else if (clickPos.file == 4) pc = piece::knight;
+		else pc = piece::bishop;
+		return true;
+	}
+}
+
+bool g_eventhandler::getPawnUpgrade(const s_pos &p, piece &pc)
+{
+	SDL_Event e;
+	while (SDL_PollEvent(&e) > 0) {
+		checkQuit(e);
+		if (e.type == SDL_MOUSEBUTTONDOWN) {
+			return getMenuPiece(p, pc, e);
+		}
+	}
+
+	return false;
+}

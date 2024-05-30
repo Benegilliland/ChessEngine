@@ -127,9 +127,9 @@ move engine::getMove()
   return m;
 }
 
-piece engine::getPawnUpgrade()
+piece engine::getPawnUpgrade(u64 loc)
 {
-	return (gui ? gui->getPawnUpgrade() : b.getPawnUpgrade());
+	return (gui ? gui->getPawnUpgrade(loc) : b.getPawnUpgrade());
 }
 
 void engine::doMove(move &m)
@@ -153,7 +153,7 @@ void engine::doMove(move &m)
 		if (gui) gui->doEnPassant(m.end.loc);
 		break;
 	case move_type::pawn_upgrade:
-		pc = getPawnUpgrade();
+		pc = getPawnUpgrade(m.end.loc);
 		b.doPawnUpgrade(m, pc);
 		if (gui) gui->doPawnUpgrade(m.end.loc, pc);
 		break;
