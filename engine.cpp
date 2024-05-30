@@ -136,6 +136,7 @@ move engine::getMove()
 void engine::doMove(move &m)
 {
   b.doMove(m);
+  if (gui) gui->doMove(m.start.loc, m.end.loc);
 }
 
 void engine::switchPlayer()

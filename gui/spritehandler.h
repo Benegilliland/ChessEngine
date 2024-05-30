@@ -23,4 +23,5 @@ public:
   void draw();
   void reset();
   void setPiece(int, piece, side);
+  void doMove(const s_pos &, const s_pos &);
 };

@@ -5,7 +5,7 @@ void g_spritehandler::createSprites(SDL_Renderer *_renderer, int width, int heig
 {
   int tile_width = width / 8;
   int tile_height = height / 8;
-  
+
   SDL_Rect pos = {0, 0, tile_width, tile_height};
 
   dragSprite.create(_renderer, spritesheet, &pos);
@@ -26,7 +26,7 @@ void g_spritehandler::reset()
 
   for (int rank = 0; rank < 8; rank++) {
     for (int file = 2; file <= 6; file++) {
-      sprites[rank][file].setSrc(nullptr); 
+      sprites[rank][file].setSrc(nullptr);
     }
 
     sprites[rank][1].setSrc(&piece_sources[side::white][piece::pawn]);
@@ -42,7 +42,7 @@ void g_spritehandler::reset()
   sprites[6][0].setSrc(&piece_sources[side::white][piece::bishop]);
   sprites[1][7].setSrc(&piece_sources[side::black][piece::bishop]);
   sprites[6][7].setSrc(&piece_sources[side::black][piece::bishop]);
-  
+
   sprites[2][0].setSrc(&piece_sources[side::white][piece::knight]);
   sprites[5][0].setSrc(&piece_sources[side::white][piece::knight]);
   sprites[2][7].setSrc(&piece_sources[side::black][piece::knight]);
@@ -71,9 +71,9 @@ void g_spritehandler::loadSpritesheet(SDL_Renderer *_renderer)
     std::cout << "Error: couldn't load spritesheet\n";
     exit(1);
   }
-  
+
   int spritesheet_width, spritesheet_height;
-  
+
   if (SDL_QueryTexture(spritesheet, NULL, NULL, &spritesheet_width, &spritesheet_height) != 0) {
     std::cout << "Error: couldn't query texture\n";
     exit(1);
@@ -102,4 +102,11 @@ void g_spritehandler::draw() {
       sprites[rank][file].draw();
 
   dragSprite.draw();
+}
+
+void g_spritehandler::doMove(const s_pos &start, const s_pos &end)
+{
+	SDL_Rect *attacker = sprites[start.rank][start.file].getSrc();
+	sprites[end.rank][end.file].setSrc(attacker);
+	sprites[start.rank][start.file].setSrc(nullptr);
 }

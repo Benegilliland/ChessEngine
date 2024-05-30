@@ -12,6 +12,11 @@ void g_sprite::setSrc(SDL_Rect *_src)
   src = _src;
 }
 
+SDL_Rect *g_sprite::getSrc()
+{
+  return src;
+}
+
 void g_sprite::draw()
 {
   if (src)

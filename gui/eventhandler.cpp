@@ -7,7 +7,7 @@ g_eventhandler::g_eventhandler(int _width, int _height)
 s_pos g_eventhandler::mouseToBoard(const SDL_Event &e)
 {
 	SDL_Point mousePos = {e.button.x, e.button.y};
-	return {mousePos.x / 8, 7 - mousePos.y / 8};
+	return {8 * mousePos.x / width, 8 * mousePos.y / height};
 }
 
 void g_eventhandler::checkQuit(const SDL_Event &e)

@@ -1,5 +1,6 @@
 #include "gui.h"
 #include <unistd.h>
+#include <iostream>
 
 g_gui::g_gui(SDL_Renderer *_renderer, int width, int height)
   : renderer(_renderer), bg(_renderer, width, height), spritehandler(_renderer, width, height),
@@ -40,4 +41,24 @@ s_pos g_gui::getEndPos() {
 		draw();
 		usleep(sleep_duration);
 	}
+}
+
+s_pos g_gui::bitboardPosition(u64 b)
+{
+	int n = 0;
+
+	while (!(b & 1)) {
+		b >>= 1;
+		n++;
+	}
+
+	return {n % 8, 7 - n / 8};
+}
+
+void g_gui::doMove(u64 start, u64 end)
+{
+	s_pos startPos = bitboardPosition(start);
+	s_pos endPos = bitboardPosition(end);
+
+	spritehandler.doMove(startPos, endPos);
 }

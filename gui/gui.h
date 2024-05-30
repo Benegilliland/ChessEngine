@@ -12,6 +12,7 @@ private:
   g_bg bg;
   g_spritehandler spritehandler;
   g_eventhandler eventhandler;
+  s_pos bitboardPosition(u64);
 
 public:
   g_gui(SDL_Renderer *, int, int);
@@ -19,4 +20,5 @@ public:
   void draw();
   s_pos getStartPos();
   s_pos getEndPos();
+  void doMove(u64, u64);
 };
