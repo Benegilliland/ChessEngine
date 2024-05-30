@@ -162,10 +162,3 @@ void engine::run()
     }
   }
 }
-
-int main(int argc, char *argv[])
-{
-  engine chess(true, 800, 800);
-  chess.run();
-  return 0;
-}

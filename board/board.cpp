@@ -3,8 +3,10 @@
 
 // Add draw by repetition
 // Add draw by insufficient material
-// Proper (possible automated) testing
-// King move generation broken
+// En passant broken
+// Pawn move generation broken
+// Add pawn upgrade GUI
+// Optimisation
 
 void board::reset()
 {
@@ -306,6 +308,14 @@ void board::togglePiece(const b_pos &p, side s)
   empty ^= p.loc;
 }
 
+bool board::pieceCanMove(const b_pos &p)
+{
+	togglePiece(p, curPlayer);
+	bool canMove = !inCheck();
+	togglePiece(p, curPlayer);
+	return canMove;
+}
+
 bool board::hasAvailableMoves()
 {
   u64 b = 1;
@@ -317,30 +327,7 @@ bool board::hasAvailableMoves()
     }
 
     b_pos p = getBoardPos(b);
-
-    if (p.pc != piece::king) {
-      u64 available_moves = 0;
-
-      togglePiece(p, curPlayer);
-
-      if (!inCheck())
-        available_moves = genStartMoves(p);
-
-      togglePiece(p, curPlayer);
-
-      if (available_moves > 0)
-        return true;
-    }
-    else {
-      u64 king_moves = genKingMoves(p.loc, curPlayer);
-      togglePiece(p, curPlayer);
-      u64 enemy_moves = genMoves(getOpponent());
-      togglePiece(p, curPlayer);
-
-      if ((king_moves & ~enemy_moves) > 0)
-        return true;
-    }
-
+    if (genStartMoves(p) > 0) return true;
     b <<= 1;
   }
 
@@ -473,12 +460,33 @@ u64 board::genStartMoves(const b_pos &p)
       break;
     case piece::king:
       b = genKingMoves(p.loc, curPlayer);
+      return validateKingMoves(b, curPlayer);
       break;
     default:
       return 0;
   }
 
-  return b;
+  if (b == 0) return 0;
+  // if b is king, check king moves (algorithm up top)
+  if (!inCheck()) return (pieceCanMove(p) ? b : 0);
+  return pieceCanBlockCheck(p, b);
+}
+
+// If we're in check, see whether our piece can block it. First we take the intersection of b's moves with the opponent's attack squares, then we check whether any of the remaining moves block check
+u64 board::pieceCanBlockCheck(const b_pos &p, u64 b)
+{
+        return b & genMoves(getOpponent()) & genQueenMoves(pieces[curPlayer][piece::king], curPlayer);
+}
+
+u64 board::validateKingMoves(u64 b, side s)
+{
+        if (b == 0) return 0;
+        pieces_side[curPlayer] ^= pieces[curPlayer][piece::king];
+        empty ^= pieces[curPlayer][piece::king];
+        b &= ~genMoves(getOpponent());
+        pieces_side[curPlayer] ^= pieces[curPlayer][piece::king];
+        empty ^= pieces[curPlayer][piece::king];
+        return b;
 }
 
 bool board::inCheck()

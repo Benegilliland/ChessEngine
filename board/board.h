@@ -9,12 +9,8 @@
 class board {
 private:
   static constexpr u64 piece_start[NUM_SIDES][NUM_PIECES] = {
-    //{0x00ff000000000000, 0x4200000000000000, 0x2400000000000000,
-    // 0x8100000000000000, 0x0800000000000000, 0x1000000000000000},
     {0x1000000000000000, 0x0800000000000000, 0x2400000000000000,
      0x4200000000000000, 0x8100000000000000, 0x00ff000000000000},
-    //{0x000000000000ff00, 0x0000000000000042, 0x0000000000000024,
-    // 0x0000000000000081, 0x0000000000000008, 0x0000000000000010},
     {0x0000000000000010, 0x0000000000000008, 0x0000000000000024,
      0x0000000000000042, 0x0000000000000081, 0x000000000000ff00}
   };
@@ -67,12 +63,15 @@ private:
   u64 genQueenMoves(u64, side);
   u64 genCastlingMoves(u64, side);
   u64 genKingMoves(u64, side);
+  u64 validateKingMoves(u64, side);
   u64 genMoves(side);
   void togglePiece(const b_pos &, side);
   //u64 genValidatedMoves(const pos &, u64);
   bool checkFiftyMoveDraw();
   bool checkInsufficientMaterial();
   bool checkRepetitionDraw();
+  bool pieceCanMove(const b_pos &);
+  u64 pieceCanBlockCheck(const b_pos &, u64);
 
 public:
   void reset();
