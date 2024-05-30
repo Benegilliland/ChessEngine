@@ -31,6 +31,7 @@ private:
   int fiftyMoveCounter;
   u64 enPassant;
   u64 startMoves;
+  u64 opponentMoves;
 
   // Console functions
   char printPos(u64);
@@ -46,6 +47,7 @@ private:
   u64 genWhitePawnMoves(u64);
   u64 genBlackPawnMoves(u64);
   u64 genPawnMoves(u64, side);
+  u64 genDiagonalPawnMoves(u64, side);
   u64 genRookMoves(u64, side);
   u64 genBishopMoves(u64, side);
   u64 genKnightMoves(u64, side);

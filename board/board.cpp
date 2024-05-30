@@ -3,7 +3,6 @@
 
 // Add draw by repetition
 // Add draw by insufficient material
-// Check king & castling move generation
 // Add pawn upgrade GUI
 // Optimisation
 
@@ -153,6 +152,8 @@ bool board::hasAvailableMoves()
 void board::switchPlayer()
 {
   curPlayer = getOpponent();
+  opponentMoves = genMoves(getOpponent());
+  printBitboard(opponentMoves);
 }
 
 u64 board::genWhitePawnMoves(u64 b)
@@ -210,28 +211,35 @@ u64 board::genQueenMoves(u64 b, side s)
   return genRookMoves(b, s) | genBishopMoves(b, s);
 }
 
-// This doesn't seem right ;)
 u64 board::genCastlingMoves(u64 b, side s)
 {
   u64 result = 0;
-  if (canCastle[s][queenside] && (b >> 1 & empty) && (b >> 2 & empty) && (b >> 3 & empty))
+
+  if (canCastle[s][queenside] && ((b >> 1 | b >> 2 | b >> 3) & empty & ~opponentMoves))
     result |= b >> 2;
-  if (canCastle[s][kingside] && (b << 1 & empty) && (b << 2 & empty))
+  if (canCastle[s][kingside] && ((b << 1 | b << 2) & empty & ~opponentMoves))
     result |= b << 2;
 
   return result;
 }
 
-// Check boundaries
 u64 board::genKingMoves(u64 b, side s)
 {
-  return genCastlingMoves(b, s) | ((b << 1 | b << 8 | b << 9 | b << 7 | b >> 1
-  | b >> 8 | b >> 9 | b >> 7) & ~pieces_side[s]);
+  return genCastlingMoves(b, s) | ((((b << 1 | b << 9 | b >> 7) & ~left_boundary)
+		 | ((b >> 1 | b >> 9 | b << 7) & ~right_boundary) | b >> 8 | b << 8) & ~pieces_side[s]);
+}
+
+u64 board::genDiagonalPawnMoves(u64 b, side s)
+{
+	if (s == side::white)
+		return (((b >> 7 & ~left_boundary) | (b >> 9 & ~right_boundary)) & (pieces_side[side::black] | enPassant));
+	else
+		return (((b << 7 & ~right_boundary) | (b << 9 & ~left_boundary)) & (pieces_side[side::white] | enPassant));
 }
 
 u64 board::genMoves(side s)
 {
-  u64 b = genPawnMoves(pieces[s][piece::pawn], s);
+  u64 b = genDiagonalPawnMoves(pieces[s][piece::pawn], s);
   b |= genRookMoves(pieces[s][piece::rook], s);
   b |= genKnightMoves(pieces[s][piece::knight], s);
   b |= genBishopMoves(pieces[s][piece::bishop], s);
@@ -277,16 +285,19 @@ u64 board::genStartMoves(const b_pos &p)
 // If we're in check, see whether our piece can block it. First we take the intersection of b's moves with the opponent's attack squares, then we check whether any of the remaining moves block check
 u64 board::pieceCanBlockCheck(const b_pos &p, u64 b)
 {
-        return b & (genMoves(getOpponent()) | pieces_side[getOpponent()])
+        return b & (opponentMoves | pieces_side[getOpponent()])
 		& genQueenMoves(pieces[curPlayer][piece::king], curPlayer);
 }
 
 u64 board::validateKingMoves(u64 b, side s)
 {
+	std::cout << "King moves\n";
+	printBitboard(b);
         if (b == 0) return 0;
         pieces_side[curPlayer] ^= pieces[curPlayer][piece::king];
         empty ^= pieces[curPlayer][piece::king];
-        b &= ~genMoves(getOpponent());
+        b &= ~opponentMoves;
+	printBitboard(b);
         pieces_side[curPlayer] ^= pieces[curPlayer][piece::king];
         empty ^= pieces[curPlayer][piece::king];
         return b;
@@ -294,7 +305,7 @@ u64 board::validateKingMoves(u64 b, side s)
 
 bool board::inCheck()
 {
-  return genMoves(getOpponent()) & pieces[curPlayer][piece::king];
+  return opponentMoves & pieces[curPlayer][piece::king];
 }
 
 // king vs king, king and bishop vs king, king and knight vs king, king and bishop vs and bishop on same coliur
