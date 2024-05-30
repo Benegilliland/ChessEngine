@@ -25,11 +25,12 @@ private:
   u64 empty;
 
   bool canCastle[NUM_SIDES][2];
-
   side curPlayer;
 
   std::list<gamestate> move_history;
   int fiftyMoveCounter;
+  u64 enPassant;
+  u64 startMoves;
 
   // Console functions
   char printPos(u64);
@@ -40,17 +41,6 @@ private:
   // Internal functions
   void resetPieces();
   void setPiecesSide();
-  bool validateEnPassant(const move &);
-  bool validatePawnMove(const move &);
-  bool validateRookMove(const move &);
-  bool validateBishopMove(const move &);
-  bool validateKnightMove(const move &);
-  bool validateQueenMove(const move &);
-  bool validateQueensideCastling(const move &, u64, u64);
-  bool validateKingsideCastling(const move  &, u64, u64);
-  bool validateCastling(const move &);
-  bool validateKingMove(const move &);
-  bool checkCollision(const move &, int, u64);
   side getOpponent();
   u64 traceRay(u64, int, bool, u64, side);
   u64 genWhitePawnMoves(u64);
@@ -66,7 +56,6 @@ private:
   u64 validateKingMoves(u64, side);
   u64 genMoves(side);
   void togglePiece(const b_pos &, side);
-  //u64 genValidatedMoves(const pos &, u64);
   bool checkFiftyMoveDraw();
   bool checkInsufficientMaterial();
   bool checkRepetitionDraw();
@@ -87,6 +76,7 @@ public:
   void doMove(const move &);
   void undoLastMove();
   bool validateStartPos(const b_pos &);
+  void saveStartMoves(u64);
   bool validateMove(const move &);
   void switchPlayer();
   u64 genStartMoves(const b_pos &);

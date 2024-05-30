@@ -108,8 +108,11 @@ void board::doMove(const move &m)
     canCastle[curPlayer][side] = false;
   }
 
-  if (m.end.pc != piece::none)
-    checkInsufficientMaterial();
+  if (m.start.pc == piece::pawn) {
+	std::cout << "m.d " << m.d << "\n";
+	if (m.d == 16) enPassant = m.start.loc >> 8;
+	else if (m.d == -16) enPassant = m.start.loc << 8;
+  }
 
   move_history.push_front(gamestate{m, fiftyMoveCounter});
 
@@ -127,6 +130,16 @@ void board::undoLastMove() {
   fiftyMoveCounter = history.fiftyMoveCounter;
 }
 
+void board::saveStartMoves(u64 m)
+{
+  startMoves = m;
+}
+
+bool board::validateMove(const move &m)
+{
+	return m.end.loc & startMoves;
+}
+
 side board::getOpponent()
 {
   return (curPlayer == side::white ? side::black : side::white);
@@ -135,170 +148,6 @@ side board::getOpponent()
 bool board::validateStartPos(const b_pos &p)
 {
   return p.loc > 0 && p.bitboard != nullptr && *p.bitboard & pieces_side[curPlayer];
-}
-
-bool board::validateEnPassant(const move &m)
-{
-  move prev = move_history.front().m;
-  return prev.start.pc == piece::pawn && (prev.d == 16 || prev.d == -16)
-    && m.end.loc == (prev.sign > 0 ? prev.start.loc >> 8 : prev.start.loc << 8);
-}
-
-bool board::validatePawnMove(const move &m)
-{
-  u64 startPos;
-  int sign;
-
-  if (*m.start.bitboard == pieces[side::white][piece::pawn]) {
-    startPos = 0x00ff000000000000;
-    sign = 1;
-  }
-  else {
-    startPos = 0x000000000000ff00;
-    sign = -1;
-  }
-
-  if (m.d == 8 * sign)
-    return m.end.bitboard == nullptr;
-  if (m.d == 16 * sign)
-    return (m.start.loc & startPos) && m.end.bitboard == nullptr && checkCollision(m, 8 * m.sign, 0);
-  if (m.d == 7 * sign || m.d == 9 * sign)
-    return (m.type == move_type::en_passant ? validateEnPassant(m) : m.end.bitboard != nullptr);
-
-  return false;
-}
-
-bool board::validateRookMove(const move &m)
-{
-  int d = (m.d > 0 ? m.d : -m.d);
-
-  if (d < 8)
-    return checkCollision(m, m.sign, (m.sign > 0 ? left_boundary : right_boundary));
-  if (d % 8 == 0)
-    return checkCollision(m, 8 * m.sign, 0);
-
-  return false;
-}
-
-bool board::validateBishopMove(const move &m)
-{
-  if (m.d % 9 == 0)
-    return checkCollision(m, 9 * m.sign, (m.sign > 0 ? right_boundary : left_boundary));
-  if (m.d % 7 == 0)
-    return checkCollision(m, 7 * m.sign, (m.sign > 0 ? left_boundary : right_boundary));
-
-  return false;
-}
-
-bool board::validateKnightMove(const move &m)
-{
-  int d = (m.d > 0 ? m.d : -m.d);
-  return d == 10 || d == 6 || d == 15 || d == 17;
-}
-
-bool board::validateQueenMove(const move &m)
-{
-  return validateRookMove(m) || validateBishopMove(m);
-}
-
-bool board::validateQueensideCastling(const move &m, u64 mask, u64 enemy_moves)
-{
-  u64 collisions = 0x1E0000000000001E & mask;
-  u64 own_pieces = (pieces_side[curPlayer] ^ pieces[curPlayer][piece::king]) & collisions;
-  enemy_moves &= collisions;
-
-  return m.end.loc & 0x0400000000000004 && canCastle[curPlayer][queenside]
-        && !enemy_moves && !own_pieces;
-}
-
-bool board::validateKingsideCastling(const move &m, u64 mask, u64 enemy_moves)
-{
-  u64 collisions = 0x7000000000000070 & mask;
-  u64 own_pieces = (pieces_side[curPlayer] ^ pieces[curPlayer][piece::king]) & collisions;
-  enemy_moves &= collisions;
-
-  return m.end.loc & 0x4000000000000040 && canCastle[curPlayer][kingside]
-      && enemy_moves == 0 && own_pieces == 0;
-}
-
-bool board::validateCastling(const move &m)
-{
-  u64 mask = (curPlayer == side::white) ? 0xFF00000000000000 : 0x00000000000000FF;
-  u64 enemy_moves = genMoves(getOpponent()) & mask;
-
-  return validateQueensideCastling(m, mask, enemy_moves) || validateKingsideCastling(m, mask, enemy_moves);
-}
-
-bool board::validateKingMove(const move &m)
-{
-  int d = (m.d > 0 ? m.d : -m.d);
-
-  if (d == 2)
-    return validateCastling(m);
-
-  return d == 1 || d == 8 || d == 9 || d == 7;
-}
-
-bool board::checkCollision(const move &m, int d, u64 boundary)
-{
-  int abs = (d > 0 ? d : -d);
-  boundary = ~boundary;
-  u64 ray = m.start.loc;
-  ray = (d > 0 ? ray >> abs : ray << abs) & boundary;
-
-  while (ray != m.end.loc) {
-    if (ray == 0 || ray & ~empty)
-      return false;
-
-    ray = (d > 0 ? ray >> abs : ray << abs) & boundary;
-  }
-
-  return true;
-}
-
-bool board::validateMove(const move &m)
-{
-  if (m.start.loc == 0 || m.end.loc == 0)
-      return false;
-
-  if (m.start.loc & ~pieces_side[curPlayer])
-    return false;
-
-  if (m.end.loc & pieces_side[curPlayer])
-    return false;
-
-  bool valid = false;
-
-  switch (m.start.pc) {
-    case piece::pawn:
-      valid = validatePawnMove(m);
-      break;
-    case piece::rook:
-      valid = validateRookMove(m);
-      break;
-    case piece::bishop:
-      valid = validateBishopMove(m);
-      break;
-    case piece::knight:
-      valid = validateKnightMove(m);
-      break;
-    case piece::queen:
-      valid = validateQueenMove(m);
-      break;
-    case piece::king:
-      valid = validateKingMove(m);
-      break;
-    default:
-      return false;
-  }
-
-  if (valid) {
-    movePieces(m);
-    valid = !inCheck();
-    movePieces(m);
-  }
-
-  return valid;
 }
 
 void board::togglePiece(const b_pos &p, side s)
@@ -409,6 +258,7 @@ u64 board::genQueenMoves(u64 b, side s)
   return genRookMoves(b, s) | genBishopMoves(b, s);
 }
 
+// This doesn't seem right ;)
 u64 board::genCastlingMoves(u64 b, side s)
 {
   u64 result = 0;
@@ -420,6 +270,7 @@ u64 board::genCastlingMoves(u64 b, side s)
   return result;
 }
 
+// Check boundaries
 u64 board::genKingMoves(u64 b, side s)
 {
   return genCastlingMoves(b, s) | ((b << 1 | b << 8 | b << 9 | b << 7 | b >> 1
@@ -434,7 +285,7 @@ u64 board::genMoves(side s)
   b |= genBishopMoves(pieces[s][piece::bishop], s);
   b |= genQueenMoves(pieces[s][piece::queen], s);
   b |= genKingMoves(pieces[s][piece::king], s);
- return b;
+  return b;
 }
 
 u64 board::genStartMoves(const b_pos &p)
@@ -444,7 +295,6 @@ u64 board::genStartMoves(const b_pos &p)
   switch (p.pc) {
     case piece::pawn:
       b = genPawnMoves(p.loc, curPlayer);
-	std::cout << "Test\n";
       break;
     case piece::knight:
       b = genKnightMoves(p.loc, curPlayer);
