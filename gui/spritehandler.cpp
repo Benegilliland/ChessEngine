@@ -131,3 +131,29 @@ void g_spritehandler::stopDragging()
 	dragSprite.setSrc(nullptr);
 	sprites[dragStartPos.rank][7 - dragStartPos.file].setSrc(pc);
 }
+
+void g_spritehandler::pawnUpgrade(const s_pos &p, piece pc)
+{
+	side s = (p.file == 7 ? side::white : side::black);
+	sprites[p.rank][p.file].setSrc(&piece_sources[s][pc]);
+}
+
+void g_spritehandler::enPassant(const s_pos &p)
+{
+	int file = (p.file == 5 ? 4 : 3);
+	sprites[p.rank][file].setSrc(nullptr);
+}
+
+void g_spritehandler::queensideCastle(const s_pos &p)
+{
+	side s = (p.file == 0 ? side::white : side::black);
+	sprites[p.rank + 1][p.file].setSrc(&piece_sources[s][piece::rook]);
+	sprites[p.rank - 2][p.file].setSrc(nullptr);
+}
+
+void g_spritehandler::kingsideCastle(const s_pos &p)
+{
+	side s = (p.file == 0 ? side::white : side::black);
+	sprites[p.rank - 1][p.file].setSrc(&piece_sources[s][piece::rook]);
+	sprites[p.rank + 1][p.file].setSrc(nullptr);
+}

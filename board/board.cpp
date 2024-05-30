@@ -3,8 +3,7 @@
 
 // Add draw by repetition
 // Add draw by insufficient material
-// En passant broken
-// Pawn move generation broken
+// Check king & castling move generation
 // Add pawn upgrade GUI
 // Optimisation
 
@@ -59,40 +58,6 @@ void board::movePieces(const move &m)
 {
   *m.start.bitboard ^= (m.start.loc | m.end.loc);
   if (m.end.bitboard) *m.end.bitboard ^= m.end.loc;
-
-  // Castling
-  if (m.start.pc == piece::king && (m.d == 2 || m.d == -2)) {
-    if (m.end.loc << 1 & pieces[curPlayer][piece::rook])
-      pieces[curPlayer][piece::rook] ^= (m.end.loc << 1 | m.end.loc >> 1);
-    else
-      pieces[curPlayer][piece::rook] ^= (m.end.loc >> 1 | m.end.loc << 1);
-  }
-
-  // En passant
-  if (m.type == move_type::en_passant) {
-    if (curPlayer == side::white)
-      pieces[side::black][piece::pawn] ^= m.end.loc << 8;
-    else
-      pieces[side::white][piece::pawn] ^= m.end.loc >> 8;
-  }
-
-  // Pawn upgrades
-  if (m.type == move_type::pawn_upgrade_queen) {
-    pieces[curPlayer][piece::pawn] ^= m.end.loc;
-    pieces[curPlayer][piece::queen] ^= m.end.loc;
-  }
-  else if (m.type == move_type::pawn_upgrade_rook) {
-    pieces[curPlayer][piece::pawn] ^= m.end.loc;
-    pieces[curPlayer][piece::rook] ^= m.end.loc;
-  }
-  else if (m.type == move_type::pawn_upgrade_knight) {
-    pieces[curPlayer][piece::pawn] ^= m.end.loc;
-    pieces[curPlayer][piece::knight] ^= m.end.loc;
-  }
-  else if (m.type == move_type::pawn_upgrade_bishop) {
-    pieces[curPlayer][piece::pawn] ^= m.end.loc;
-    pieces[curPlayer][piece::bishop] ^= m.end.loc;
-  }
 
   setPiecesSide();
 }
@@ -312,7 +277,8 @@ u64 board::genStartMoves(const b_pos &p)
 // If we're in check, see whether our piece can block it. First we take the intersection of b's moves with the opponent's attack squares, then we check whether any of the remaining moves block check
 u64 board::pieceCanBlockCheck(const b_pos &p, u64 b)
 {
-        return b & genMoves(getOpponent()) & genQueenMoves(pieces[curPlayer][piece::king], curPlayer);
+        return b & (genMoves(getOpponent()) | pieces_side[getOpponent()])
+		& genQueenMoves(pieces[curPlayer][piece::king], curPlayer);
 }
 
 u64 board::validateKingMoves(u64 b, side s)
@@ -352,4 +318,46 @@ bool board::gameOver()
 {
   return !hasAvailableMoves() || checkFiftyMoveDraw()
       || checkInsufficientMaterial() || checkRepetitionDraw();
+}
+
+void board::setMoveType(move &m)
+{
+	if (m.end.loc == enPassant)
+		m.type = move_type::en_passant;
+	else if (m.start.pc == piece::pawn && (m.end.loc & 0xFF000000000000FF))
+		m.type = move_type::pawn_upgrade;
+	else if (m.start.pc == piece::king && m.d == 2)
+		m.type = move_type::queenside_castle;
+	else if (m.start.pc == piece::king && m.d == -2)
+		m.type = move_type::kingside_castle;
+	else
+		m.type = move_type::normal;
+}
+
+void board::doPawnUpgrade(const move &m, piece pc)
+{
+	pieces[curPlayer][piece::pawn] ^= m.end.loc;
+	pieces[curPlayer][pc] ^= m.end.loc;
+	setPiecesSide();
+}
+
+void board::doEnPassant(const move &m)
+{
+	if (curPlayer == side::white)
+		pieces[side::black][piece::pawn] ^= (m.end.loc << 8);
+	else
+		pieces[side::white][piece::pawn] ^= (m.end.loc >> 8);
+
+	setPiecesSide();
+}
+
+void board::doQueensideCastle(const move &m)
+{
+	pieces[curPlayer][piece::rook] ^= (m.end.loc << 1 | m.end.loc >> 2);
+	setPiecesSide();
+}
+
+void board::doKingsideCastle(const move &m) {
+	pieces[curPlayer][piece::rook] ^= (m.end.loc << 1 | m.end.loc >> 1);
+	setPiecesSide();
 }

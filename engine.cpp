@@ -77,9 +77,7 @@ b_pos engine::getStartPos()
 b_pos engine::getEndPos()
 {
 	s_pos pos = gui ? gui->getEndPos() : b.getEndPos();
-	b_pos end = b.getBoardPos(pos);
-	b.printBitboard(end.loc);
-	return end;
+	return b.getBoardPos(pos);
 }
 
 void engine::calcDiff(move &m)
@@ -103,9 +101,6 @@ void engine::calcDiff(move &m)
 
   m.sign = sign;
   m.d = d;
-
-  if (m.start.pc == piece::pawn && m.end.pc == piece::none && (m.d == 7 || m.d == 9 || m.d == -9 || m.d == -7))
-    m.type = move_type::en_passant;
 }
 
 void engine::showAvailableMoves(const b_pos &p)
@@ -125,21 +120,46 @@ move engine::getMove()
     showAvailableMoves(m.start);
     m.end = getEndPos();
     calcDiff(m);
-
-    // Pawn
-    if (m.start.pc == piece::pawn && (m.end.loc & 0xFF000000000000FF))
-      m.type = b.getPawnUpgradeType();
-
     validMove = b.validateMove(m);
   }
 
+  b.setMoveType(m);
   return m;
+}
+
+piece engine::getPawnUpgrade()
+{
+	return (gui ? gui->getPawnUpgrade() : b.getPawnUpgrade());
 }
 
 void engine::doMove(move &m)
 {
   b.doMove(m);
   if (gui) gui->doMove(m.start.loc, m.end.loc);
+
+  piece pc = piece::none;
+
+  switch (m.type) {
+	case move_type::queenside_castle:
+		b.doQueensideCastle(m);
+		if (gui) gui->doQueensideCastle(m.end.loc);
+		break;
+	case move_type::kingside_castle:
+		b.doKingsideCastle(m);
+		if (gui) gui->doKingsideCastle(m.end.loc);
+		break;
+	case move_type::en_passant:
+		b.doEnPassant(m);
+		if (gui) gui->doEnPassant(m.end.loc);
+		break;
+	case move_type::pawn_upgrade:
+		pc = getPawnUpgrade();
+		b.doPawnUpgrade(m, pc);
+		if (gui) gui->doPawnUpgrade(m.end.loc, pc);
+		break;
+	default:
+		break;
+  }
 }
 
 void engine::switchPlayer()

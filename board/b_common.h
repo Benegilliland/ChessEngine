@@ -17,10 +17,7 @@ enum class move_type {
   queenside_castle,
   kingside_castle,
   en_passant,
-  pawn_upgrade_queen,
-  pawn_upgrade_rook,
-  pawn_upgrade_knight,
-  pawn_upgrade_bishop
+  pawn_upgrade,
 };
 
 struct move {

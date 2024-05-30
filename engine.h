@@ -21,6 +21,7 @@ private:
   void showAvailableMoves(const b_pos &);
   void doMove(move &);
   void switchPlayer();
+  piece getPawnUpgrade();
 
 public:
   engine(bool, int, int);

@@ -28,4 +28,8 @@ public:
   void startDragging(const s_pos &, const SDL_Point &);
   void stopDragging();
   void moveDragPiece(const SDL_Point &);
+  void pawnUpgrade(const s_pos &, piece);
+  void enPassant(const s_pos &);
+  void queensideCastle(const s_pos &);
+  void kingsideCastle(const s_pos &);
 };

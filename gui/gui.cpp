@@ -83,3 +83,32 @@ void g_gui::showAvailableMoves(u64 bitboard)
 {
 	bg.highlightSquares(bitboard);
 }
+
+void g_gui::doPawnUpgrade(u64 bitboard, piece pc)
+{
+	s_pos pos = bitboardPosition(bitboard);
+	spritehandler.pawnUpgrade(pos, pc);
+}
+
+void g_gui::doEnPassant(u64 end)
+{
+	s_pos pos = bitboardPosition(end);
+	spritehandler.enPassant(pos);
+}
+
+void g_gui::doQueensideCastle(u64 end)
+{
+	s_pos pos = bitboardPosition(end);
+	spritehandler.queensideCastle(pos);
+}
+
+void g_gui::doKingsideCastle(u64 end)
+{
+	s_pos pos = bitboardPosition(end);
+	spritehandler.kingsideCastle(pos);
+}
+
+piece g_gui::getPawnUpgrade()
+{
+	return piece::queen;
+}

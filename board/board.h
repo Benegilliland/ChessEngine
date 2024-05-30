@@ -69,7 +69,7 @@ public:
   b_pos getBoardPos(u64);
   s_pos getStartPos();
   s_pos getEndPos();
-  move_type getPawnUpgradeType();
+  piece getPawnUpgrade();
   move getMove();
   void movePieces(const move &);
   void doMove(const move &);
@@ -82,4 +82,9 @@ public:
   bool hasAvailableMoves();
   bool gameOver();
   bool inCheck();
+  void doPawnUpgrade(const move &, piece);
+  void doQueensideCastle(const move &);
+  void doKingsideCastle(const move &);
+  void doEnPassant(const move &);
+  void setMoveType(move &);
 };

@@ -104,7 +104,7 @@ s_pos board::getEndPos()
   return inputToPos(input);
 }
 
-move_type board::getPawnUpgradeType()
+piece board::getPawnUpgrade()
 {
   char c = '\0';
 
@@ -115,19 +115,14 @@ move_type board::getPawnUpgradeType()
 
   switch (c) {
     case 'Q':
-      return move_type::pawn_upgrade_queen;
-      break;
+      return piece::queen;
     case 'B':
-      return move_type::pawn_upgrade_bishop;
-      break;
+      return piece::bishop;
     case 'R':
-      return move_type::pawn_upgrade_rook;
-      break;
+      return piece::rook;
     case 'N':
-      return move_type::pawn_upgrade_knight;
-      break;
+      return piece::knight;
     default:
-      return move_type::normal;
-      break;
+      return piece::none;
   }
 }

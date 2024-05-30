@@ -23,4 +23,9 @@ public:
   s_pos getEndPos();
   void doMove(u64, u64);
   void showAvailableMoves(u64);
+  void doPawnUpgrade(u64, piece);
+  void doEnPassant(u64);
+  void doKingsideCastle(u64);
+  void doQueensideCastle(u64);
+  piece getPawnUpgrade();
 };
