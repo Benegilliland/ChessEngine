@@ -68,6 +68,7 @@ b_pos engine::getStartPos()
     board_pos = b.getBoardPos(pos);
     b.printBitboard(board_pos.loc);
     validPos = b.validateStartPos(board_pos);
+    if (!validPos && gui) gui->stopDragging();
   }
 
   return board_pos;

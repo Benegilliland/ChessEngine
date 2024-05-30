@@ -23,10 +23,14 @@ void g_gui::draw()
 
 s_pos g_gui::getStartPos() {
   s_pos p;
+  SDL_Point pt;
 
   while (true) {
-    if (eventhandler.getStartPos(p))
-	    return p;
+    if (eventhandler.getStartPos(p, pt)) {
+      spritehandler.startDragging(p, pt);
+      return p;
+    }
+
     draw();
     usleep(sleep_duration);
   }
@@ -34,10 +38,16 @@ s_pos g_gui::getStartPos() {
 
 s_pos g_gui::getEndPos() {
 	s_pos p;
+	SDL_Point pt;
 
 	while (true) {
-		if (eventhandler.getEndPos(p))
+		bool result = eventhandler.getEndPos(p, pt);
+		spritehandler.moveDragPiece(pt);
+		if (result) {
+			spritehandler.stopDragging();
 			return p;
+		}
+
 		draw();
 		usleep(sleep_duration);
 	}
@@ -61,4 +71,9 @@ void g_gui::doMove(u64 start, u64 end)
 	s_pos endPos = bitboardPosition(end);
 
 	spritehandler.doMove(startPos, endPos);
+}
+
+void g_gui::stopDragging()
+{
+	spritehandler.stopDragging();
 }

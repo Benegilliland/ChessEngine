@@ -17,6 +17,18 @@ SDL_Rect *g_sprite::getSrc()
   return src;
 }
 
+void g_sprite::setPos(const SDL_Point &pt)
+{
+	pos.x = pt.x;
+	pos.y = pt.y;
+}
+
+void g_sprite::move(const SDL_Point &pt)
+{
+	pos.x += pt.x;
+	pos.y += pt.y;
+}
+
 void g_sprite::draw()
 {
   if (src)

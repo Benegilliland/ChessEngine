@@ -19,6 +19,7 @@ public:
   ~g_gui();
   void draw();
   s_pos getStartPos();
+  void stopDragging();
   s_pos getEndPos();
   void doMove(u64, u64);
 };

@@ -16,13 +16,14 @@ void g_eventhandler::checkQuit(const SDL_Event &e)
 		exit(1);
 }
 
-bool g_eventhandler::getStartPos(s_pos &p)
+bool g_eventhandler::getStartPos(s_pos &p, SDL_Point &pt)
 {
 	SDL_Event e;
 	while (SDL_PollEvent(&e) > 0) {
 		checkQuit(e);
 
 		if (e.type == SDL_MOUSEBUTTONDOWN) {
+			pt = {e.button.x - width / 16, e.button.y - height / 16};
 			p = mouseToBoard(e);
 			std::cout << "Mouse down\n";
 			return true;
@@ -32,17 +33,23 @@ bool g_eventhandler::getStartPos(s_pos &p)
 	return false;
 }
 
-bool g_eventhandler::getEndPos(s_pos &p)
+bool g_eventhandler::getEndPos(s_pos &p, SDL_Point &pt)
 {
 	SDL_Event e;
+	pt = {0, 0};
 	while (SDL_PollEvent(&e) > 0) {
 		checkQuit(e);
+		if (e.type == SDL_MOUSEMOTION) {
+			pt.x += e.motion.xrel;
+			pt.y += e.motion.yrel;
+		}
 
-		if (e.type == SDL_MOUSEBUTTONUP) {
+		else if (e.type == SDL_MOUSEBUTTONUP) {
 			p = mouseToBoard(e);
 			std::cout << "Mouse up\n";
 			return true;
 		}
+
 	}
 
 	return false;

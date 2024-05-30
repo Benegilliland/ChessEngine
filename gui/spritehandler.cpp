@@ -110,3 +110,24 @@ void g_spritehandler::doMove(const s_pos &start, const s_pos &end)
 	sprites[end.rank][end.file].setSrc(attacker);
 	sprites[start.rank][start.file].setSrc(nullptr);
 }
+
+void g_spritehandler::startDragging(const s_pos &p, const SDL_Point &pt)
+{
+	SDL_Rect *src = sprites[p.rank][7 - p.file].getSrc();
+	sprites[p.rank][7 - p.file].setSrc(nullptr);
+	dragSprite.setSrc(src);
+	dragSprite.setPos(pt);
+	dragStartPos = p;
+}
+
+void g_spritehandler::moveDragPiece(const SDL_Point &pt)
+{
+	dragSprite.move(pt);
+}
+
+void g_spritehandler::stopDragging()
+{
+	SDL_Rect *pc = dragSprite.getSrc();
+	dragSprite.setSrc(nullptr);
+	sprites[dragStartPos.rank][7 - dragStartPos.file].setSrc(pc);
+}

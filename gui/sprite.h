@@ -12,5 +12,7 @@ public:
   void create(SDL_Renderer *, SDL_Texture *,  SDL_Rect*);
   void setSrc(SDL_Rect *);
   SDL_Rect *getSrc();
+  void setPos(const SDL_Point &);
+  void move(const SDL_Point &);
   void draw();
 };

@@ -14,6 +14,7 @@ private:
 
   g_sprite sprites[NUM_RANKS][NUM_FILES];
   g_sprite dragSprite;
+  s_pos dragStartPos;
 
   void loadSpritesheet(SDL_Renderer *);
   void createSprites(SDL_Renderer *, int, int);
@@ -24,4 +25,7 @@ public:
   void reset();
   void setPiece(int, piece, side);
   void doMove(const s_pos &, const s_pos &);
+  void startDragging(const s_pos &, const SDL_Point &);
+  void stopDragging();
+  void moveDragPiece(const SDL_Point &);
 };
