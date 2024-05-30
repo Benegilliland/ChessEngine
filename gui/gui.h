@@ -22,4 +22,5 @@ public:
   void stopDragging();
   s_pos getEndPos();
   void doMove(u64, u64);
+  void showAvailableMoves(u64);
 };

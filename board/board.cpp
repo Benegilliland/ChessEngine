@@ -4,7 +4,7 @@
 // Add draw by repetition
 // Add draw by insufficient material
 // Proper (possible automated) testing
-// GUI
+// King move generation broken
 
 void board::reset()
 {

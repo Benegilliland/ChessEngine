@@ -110,7 +110,8 @@ void engine::calcDiff(move &m)
 
 void engine::showAvailableMoves(const b_pos &p)
 {
-  b.printBitboard(b.genStartMoves(p));
+  u64 moves = b.genStartMoves(p);
+  gui ? gui->showAvailableMoves(moves) : b.printBitboard(moves);
 }
 
 move engine::getMove()

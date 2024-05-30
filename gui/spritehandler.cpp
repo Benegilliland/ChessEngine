@@ -38,15 +38,15 @@ void g_spritehandler::reset()
   sprites[0][7].setSrc(&piece_sources[side::black][piece::rook]);
   sprites[7][7].setSrc(&piece_sources[side::black][piece::rook]);
 
-  sprites[1][0].setSrc(&piece_sources[side::white][piece::bishop]);
-  sprites[6][0].setSrc(&piece_sources[side::white][piece::bishop]);
-  sprites[1][7].setSrc(&piece_sources[side::black][piece::bishop]);
-  sprites[6][7].setSrc(&piece_sources[side::black][piece::bishop]);
+  sprites[1][0].setSrc(&piece_sources[side::white][piece::knight]);
+  sprites[6][0].setSrc(&piece_sources[side::white][piece::knight]);
+  sprites[1][7].setSrc(&piece_sources[side::black][piece::knight]);
+  sprites[6][7].setSrc(&piece_sources[side::black][piece::knight]);
 
-  sprites[2][0].setSrc(&piece_sources[side::white][piece::knight]);
-  sprites[5][0].setSrc(&piece_sources[side::white][piece::knight]);
-  sprites[2][7].setSrc(&piece_sources[side::black][piece::knight]);
-  sprites[5][7].setSrc(&piece_sources[side::black][piece::knight]);
+  sprites[2][0].setSrc(&piece_sources[side::white][piece::bishop]);
+  sprites[5][0].setSrc(&piece_sources[side::white][piece::bishop]);
+  sprites[2][7].setSrc(&piece_sources[side::black][piece::bishop]);
+  sprites[5][7].setSrc(&piece_sources[side::black][piece::bishop]);
 
   sprites[3][0].setSrc(&piece_sources[side::white][piece::queen]);
   sprites[3][7].setSrc(&piece_sources[side::black][piece::queen]);

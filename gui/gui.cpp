@@ -44,7 +44,7 @@ s_pos g_gui::getEndPos() {
 		bool result = eventhandler.getEndPos(p, pt);
 		spritehandler.moveDragPiece(pt);
 		if (result) {
-			spritehandler.stopDragging();
+			stopDragging();
 			return p;
 		}
 
@@ -75,5 +75,11 @@ void g_gui::doMove(u64 start, u64 end)
 
 void g_gui::stopDragging()
 {
+	bg.unhighlightSquares();
 	spritehandler.stopDragging();
+}
+
+void g_gui::showAvailableMoves(u64 bitboard)
+{
+	bg.highlightSquares(bitboard);
 }
