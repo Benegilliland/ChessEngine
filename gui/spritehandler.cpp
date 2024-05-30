@@ -3,8 +3,8 @@
 
 void g_spritehandler::createSprites(SDL_Renderer *_renderer, int width, int height)
 {
-  int tile_width = width / 8;
-  int tile_height = height / 8;
+  tile_width = width / 8;
+  tile_height = height / 8;
 
   SDL_Rect pos = {0, 0, tile_width, tile_height};
 
@@ -17,6 +17,11 @@ void g_spritehandler::createSprites(SDL_Renderer *_renderer, int width, int heig
 
       sprites[rank][file].create(_renderer, spritesheet, &pos);
     }
+  }
+
+  for (int i = 0; i < NUM_UPGRADES; i++) {
+	pawnUpgradeTiles[i].w = tile_width;
+	pawnUpgradeTiles[i].h = tile_height;
   }
 }
 
@@ -53,6 +58,9 @@ void g_spritehandler::reset()
 
   sprites[4][0].setSrc(&piece_sources[side::white][piece::king]);
   sprites[4][7].setSrc(&piece_sources[side::black][piece::king]);
+
+  showUpgradeMenu = true;
+  showPawnUpgrade({3, 7});
 }
 
 void g_spritehandler::setPiece(int pos, piece pc, side s)
@@ -90,7 +98,9 @@ void g_spritehandler::loadSpritesheet(SDL_Renderer *_renderer)
 }
 
 g_spritehandler::g_spritehandler(SDL_Renderer *_renderer, int width, int height)
+ 	: renderer(_renderer)
 {
+
   loadSpritesheet(_renderer);
   createSprites(_renderer, width, height);
   reset();
@@ -102,6 +112,11 @@ void g_spritehandler::draw() {
       sprites[rank][file].draw();
 
   dragSprite.draw();
+
+  if (showUpgradeMenu) {
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	SDL_RenderFillRects(renderer, pawnUpgradeTiles, NUM_UPGRADES);
+  }
 }
 
 void g_spritehandler::doMove(const s_pos &start, const s_pos &end)
@@ -156,4 +171,27 @@ void g_spritehandler::kingsideCastle(const s_pos &p)
 	side s = (p.file == 0 ? side::white : side::black);
 	sprites[p.rank - 1][p.file].setSrc(&piece_sources[s][piece::rook]);
 	sprites[p.rank + 1][p.file].setSrc(nullptr);
+}
+
+void g_spritehandler::showPawnUpgrade(const s_pos &p)
+{
+	side s;
+	int y_direction, y_start_pos;
+	int x_start_pos = p.rank * tile_width;
+
+	if (p.file == 7) {
+		s = side::white;
+		y_direction = tile_height;
+		y_start_pos = tile_height;
+	}
+	else {
+		s = side::black;
+		y_direction = -tile_height;
+		y_start_pos = 6 * tile_height;
+	}
+
+	for (int i = 0; i < 4; i++) {
+		pawnUpgradeTiles[i].x = x_start_pos;
+		pawnUpgradeTiles[i].y = y_start_pos + i * y_direction;
+	}
 }

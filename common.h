@@ -26,3 +26,5 @@ enum piece : int {
 struct s_pos {
 	int rank, file;
 };
+
+int count_bits(u64);

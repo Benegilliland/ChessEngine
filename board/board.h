@@ -26,6 +26,7 @@ private:
 
   bool canCastle[NUM_SIDES][2];
   side curPlayer;
+  side opponent;
 
   std::list<gamestate> move_history;
   int fiftyMoveCounter;

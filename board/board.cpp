@@ -11,6 +11,7 @@ void board::reset()
   resetPieces();
   setPiecesSide();
   curPlayer = side::white;
+  opponent = side::black;
   canCastle[side::white][queenside] = canCastle[side::white][kingside]
     = canCastle[side::black][queenside] = canCastle[side::black][kingside] = true;
   fiftyMoveCounter = 0;
@@ -151,9 +152,9 @@ bool board::hasAvailableMoves()
 
 void board::switchPlayer()
 {
+  opponent = curPlayer;
   curPlayer = getOpponent();
-  opponentMoves = genMoves(getOpponent());
-  printBitboard(opponentMoves);
+  opponentMoves = genMoves(opponent);
 }
 
 u64 board::genWhitePawnMoves(u64 b)
@@ -285,7 +286,7 @@ u64 board::genStartMoves(const b_pos &p)
 // If we're in check, see whether our piece can block it. First we take the intersection of b's moves with the opponent's attack squares, then we check whether any of the remaining moves block check
 u64 board::pieceCanBlockCheck(const b_pos &p, u64 b)
 {
-        return b & (opponentMoves | pieces_side[getOpponent()])
+        return b & (opponentMoves | pieces_side[opponent])
 		& genQueenMoves(pieces[curPlayer][piece::king], curPlayer);
 }
 
@@ -311,6 +312,10 @@ bool board::inCheck()
 // king vs king, king and bishop vs king, king and knight vs king, king and bishop vs and bishop on same coliur
 bool board::checkInsufficientMaterial()
 {
+  if (pieces_side[curPlayer] == pieces[curPlayer][piece::king]) {
+	u64 enemy_pieces = pieces_side[opponent]  ^ pieces[opponent][piece::king];
+  }
+
   return false;
 }
 
