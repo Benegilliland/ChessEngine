@@ -56,12 +56,13 @@ private:
   u64 genCastlingMoves(u64, side);
   u64 genKingMoves(u64, side);
   u64 validateKingMoves(u64, side);
+  u64 genOpponentRayMoves();
   u64 genMoves(side);
   void togglePiece(const b_pos &, side);
   bool checkFiftyMoveDraw();
   bool checkInsufficientMaterial();
   bool checkRepetitionDraw();
-  bool pieceCanMove(const b_pos &);
+  bool pieceCanMove(const b_pos &p);
   u64 pieceCanBlockCheck(const b_pos &, u64);
 
 public:

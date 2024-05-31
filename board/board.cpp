@@ -128,10 +128,10 @@ void board::togglePiece(const b_pos &p, side s)
 // Check intersection between enemy ray tracing pieces and king's ray tracing
 bool board::pieceCanMove(const b_pos &p)
 {
-	togglePiece(p, curPlayer);
-	bool canMove = !inCheck();
-	togglePiece(p, curPlayer);
-	return canMove;
+	std::cout << "niiga\n";
+	printBitboard(genOpponentRayMoves());
+	return (p.loc & genOpponentRayMoves()
+		& genQueenMoves(pieces[curPlayer][piece::king], opponent)) == 0;
 }
 
 bool board::hasAvailableMoves()
@@ -238,6 +238,14 @@ u64 board::genDiagonalPawnMoves(u64 b, side s)
 		return (((b >> 7 & ~left_boundary) | (b >> 9 & ~right_boundary)) & (pieces_side[side::black] | enPassant));
 	else
 		return (((b << 7 & ~right_boundary) | (b << 9 & ~left_boundary)) & (pieces_side[side::white] | enPassant));
+}
+
+u64 board::genOpponentRayMoves()
+{
+	u64 b = genRookMoves(pieces[opponent][piece::rook], opponent);
+	b |= genBishopMoves(pieces[opponent][piece::bishop], opponent);
+	b |= genQueenMoves(pieces[opponent][piece::queen], opponent);
+	return b;
 }
 
 u64 board::genMoves(side s)
