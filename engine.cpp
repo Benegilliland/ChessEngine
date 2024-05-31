@@ -80,29 +80,6 @@ b_pos engine::getEndPos()
 	return b.getBoardPos(pos);
 }
 
-void engine::calcDiff(move &m)
-{
-  u64 dividend;
-  int sign;
-
-  if (m.start.loc > m.end.loc) {
-    dividend = m.start.loc / m.end.loc;
-    sign = 1;
-  }
-  else {
-    dividend = m.end.loc / m.start.loc;
-    sign = -1;
-  }
-
-  int d = 0;
-
-  while (dividend >>= 1 > 0)
-    d += sign;
-
-  m.sign = sign;
-  m.d = d;
-}
-
 void engine::showAvailableMoves(const b_pos &p)
 {
   u64 moves = b.genStartMoves(p);
@@ -119,7 +96,6 @@ move engine::getMove()
     m.start = getStartPos();
     showAvailableMoves(m.start);
     m.end = getEndPos();
-    calcDiff(m);
     validMove = b.validateMove(m);
   }
 

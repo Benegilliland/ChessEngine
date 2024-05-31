@@ -74,9 +74,9 @@ void board::doMove(const move &m)
     canCastle[curPlayer][side] = false;
   }
 
-  if (m.start.pc == piece::pawn && (m.end.loc == m.start.loc >> 16))
+  if (m.start.pc == piece::pawn && m.d == 16)
 	enPassant = m.start.loc >> 8;
-  else if (m.start.pc == piece::pawn && (m.end.loc == m.start.loc << 16))
+  else if (m.start.pc == piece::pawn && m.d == -16)
 	enPassant = m.start.loc << 8;
   else
 	enPassant = 0;
@@ -344,9 +344,9 @@ void board::setMoveType(move &m)
 		m.type = move_type::en_passant;
 	else if (m.start.pc == piece::pawn && (m.end.loc & 0xFF000000000000FF))
 		m.type = move_type::pawn_upgrade;
-	else if (m.start.pc == piece::king && (m.end.loc == m.start.loc >> 2))
+	else if (m.start.pc == piece::king && m.d == 2)
 		m.type = move_type::queenside_castle;
-	else if (m.start.pc == piece::king && (m.end.loc == m.start.loc << 2))
+	else if (m.start.pc == piece::king && m.d == -2)
 		m.type = move_type::kingside_castle;
 	else
 		m.type = move_type::normal;

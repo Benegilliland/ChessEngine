@@ -22,7 +22,6 @@ enum class move_type {
 
 struct move {
   b_pos start, end;
-  int d, sign;
   move_type type = move_type::normal;
 };
 
