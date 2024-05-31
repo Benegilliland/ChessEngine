@@ -87,6 +87,8 @@ void board::doMove(const move &m)
     fiftyMoveCounter++;
   else
     fiftyMoveCounter = 0;
+
+  std::cout << "Score = " << hashBoard() << "\n";
 }
 
 void board::undoLastMove() {
@@ -124,12 +126,8 @@ void board::togglePiece(const b_pos &p, side s)
   empty ^= p.loc;
 }
 
-// This function is now broken - should regenerate opponent moves, but can it be optimised?
-// Check intersection between enemy ray tracing pieces and king's ray tracing
 bool board::pieceCanMove(const b_pos &p)
 {
-	std::cout << "niiga\n";
-	printBitboard(genOpponentRayMoves());
 	return (p.loc & genOpponentRayMoves()
 		& genQueenMoves(pieces[curPlayer][piece::king], opponent)) == 0;
 }

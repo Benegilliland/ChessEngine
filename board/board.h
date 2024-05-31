@@ -62,8 +62,9 @@ private:
   bool checkFiftyMoveDraw();
   bool checkInsufficientMaterial();
   bool checkRepetitionDraw();
-  bool pieceCanMove(const b_pos &p);
+  bool pieceCanMove(const b_pos &);
   u64 pieceCanBlockCheck(const b_pos &, u64);
+  int countMoves(side);
 
 public:
   void reset();
@@ -91,4 +92,6 @@ public:
   void doKingsideCastle(const move &);
   void doEnPassant(const move &);
   void setMoveType(move &);
+  double hashBoard();
 };
+
