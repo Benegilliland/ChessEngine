@@ -3,13 +3,16 @@
 #include "board/b_common.h"
 #include "board/board.h"
 #include "gui/gui.h"
+#include "ai/ai.h"
 
 class engine {
 private:
   board b;
   g_gui *gui;
+  c_ai *ai;
   SDL_Window *window;
   SDL_Renderer *renderer;
+  control players[NUM_SIDES];
 
   void init_gui(int, int);
   void destroy_gui();
@@ -23,7 +26,7 @@ private:
   piece getPawnUpgrade(u64);
 
 public:
-  engine(bool, int, int);
+  engine(control, control, bool, int, int);
   ~engine();
   void run();
 };

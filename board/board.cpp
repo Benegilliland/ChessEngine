@@ -4,6 +4,8 @@
 // Add draw by repetition
 // Add draw by insufficient material
 // Add pawn upgrade GUI
+// Shortcut for checking whether piece can move is broken
+// Pawns can double move through enemy piece
 // Optimisation
 
 void board::reset()
@@ -16,6 +18,7 @@ void board::reset()
     = canCastle[side::black][queenside] = canCastle[side::black][kingside] = true;
   fiftyMoveCounter = 0;
   enPassant = 0;
+  generated_moves[side::white] = generated_moves[side::black] = generated_ray_moves[side::white] = generated_ray_moves[side::black] = 0;
 }
 
 void board::resetPieces()
@@ -88,7 +91,8 @@ void board::doMove(const move &m)
   else
     fiftyMoveCounter = 0;
 
-  std::cout << "Score = " << hashBoard() << "\n";
+  genMoves(side::white);
+  genMoves(side::black);
 }
 
 void board::undoLastMove() {
@@ -128,7 +132,7 @@ void board::togglePiece(const b_pos &p, side s)
 
 bool board::pieceCanMove(const b_pos &p)
 {
-	return (p.loc & genOpponentRayMoves()
+	return (p.loc & generated_ray_moves[opponent]
 		& genQueenMoves(pieces[curPlayer][piece::king], opponent)) == 0;
 }
 
@@ -154,7 +158,6 @@ void board::switchPlayer()
 {
   opponent = curPlayer;
   curPlayer = getOpponent();
-  opponentMoves = genMoves(opponent);
 }
 
 u64 board::genWhitePawnMoves(u64 b)
@@ -203,8 +206,7 @@ u64 board::genKnightMoves(u64 b, side s)
   return (((b << 10 | b >> 6) & ~right_boundary_knight)
       | ((b << 17 | b >> 15) & ~left_boundary)
       | ((b << 6 | b >> 10) & ~left_boundary_knight)
-      | ((b << 15 | b >> 17) & ~right_boundary))
-      & ~pieces_side[s];
+      | ((b << 15 | b >> 17) & ~right_boundary));
 }
 
 u64 board::genQueenMoves(u64 b, side s)
@@ -216,9 +218,9 @@ u64 board::genCastlingMoves(u64 b, side s)
 {
   u64 result = 0;
 
-  if (canCastle[s][queenside] && ((b >> 1 | b >> 2 | b >> 3) & empty & ~opponentMoves))
+  if (canCastle[s][queenside] && ((b >> 1 | b >> 2 | b >> 3) & empty & ~generated_moves[opponent]))
     result |= b >> 2;
-  if (canCastle[s][kingside] && ((b << 1 | b << 2) & empty & ~opponentMoves))
+  if (canCastle[s][kingside] && ((b << 1 | b << 2) & empty & ~generated_moves[opponent]))
     result |= b << 2;
 
   return result;
@@ -230,31 +232,24 @@ u64 board::genKingMoves(u64 b, side s)
 		 | ((b >> 1 | b >> 9 | b << 7) & ~right_boundary) | b >> 8 | b << 8) & ~pieces_side[s]);
 }
 
-u64 board::genDiagonalPawnMoves(u64 b, side s)
+u64 board::genRayMoves(side s)
 {
-	if (s == side::white)
-		return (((b >> 7 & ~left_boundary) | (b >> 9 & ~right_boundary)) & (pieces_side[side::black] | enPassant));
-	else
-		return (((b << 7 & ~right_boundary) | (b << 9 & ~left_boundary)) & (pieces_side[side::white] | enPassant));
-}
-
-u64 board::genOpponentRayMoves()
-{
-	u64 b = genRookMoves(pieces[opponent][piece::rook], opponent);
-	b |= genBishopMoves(pieces[opponent][piece::bishop], opponent);
-	b |= genQueenMoves(pieces[opponent][piece::queen], opponent);
+	u64 b = genRookMoves(pieces[s][piece::rook], s);
+	b |= genBishopMoves(pieces[s][piece::bishop], s);
+	b |= genQueenMoves(pieces[s][piece::queen], s);
 	return b;
 }
 
-u64 board::genMoves(side s)
+void board::genMoves(side s)
 {
-  u64 b = genDiagonalPawnMoves(pieces[s][piece::pawn], s);
-  b |= genRookMoves(pieces[s][piece::rook], s);
+  u64 b = genRayMoves(s);
+  generated_ray_moves[s] = b;
+
+  b |= genPawnMoves(pieces[s][piece::pawn], s);
   b |= genKnightMoves(pieces[s][piece::knight], s);
-  b |= genBishopMoves(pieces[s][piece::bishop], s);
-  b |= genQueenMoves(pieces[s][piece::queen], s);
   b |= genKingMoves(pieces[s][piece::king], s);
-  return b;
+  generated_moves[s] = (b & ~pieces_side[s]);
+
 }
 
 u64 board::genStartMoves(const b_pos &p)
@@ -285,28 +280,26 @@ u64 board::genStartMoves(const b_pos &p)
       return 0;
   }
 
+  b &= ~pieces_side[curPlayer];
   if (b == 0) return 0;
 
   if (!inCheck()) return (pieceCanMove(p) ? b : 0);
-  return pieceCanBlockCheck(p, b);
+  else return pieceCanBlockCheck(p, b);
 }
 
 // If we're in check, see whether our piece can block it. First we take the intersection of b's moves with the opponent's attack squares, then we check whether any of the remaining moves block check
 u64 board::pieceCanBlockCheck(const b_pos &p, u64 b)
 {
-        return b & (opponentMoves | pieces_side[opponent])
+        return b & (generated_moves[opponent] | pieces_side[opponent])
 		& genQueenMoves(pieces[curPlayer][piece::king], curPlayer);
 }
 
 u64 board::validateKingMoves(u64 b, side s)
 {
-	std::cout << "King moves\n";
-	printBitboard(b);
         if (b == 0) return 0;
         pieces_side[curPlayer] ^= pieces[curPlayer][piece::king];
         empty ^= pieces[curPlayer][piece::king];
-        b &= ~opponentMoves;
-	printBitboard(b);
+        b &= ~generated_moves[opponent];
         pieces_side[curPlayer] ^= pieces[curPlayer][piece::king];
         empty ^= pieces[curPlayer][piece::king];
         return b;
@@ -314,7 +307,7 @@ u64 board::validateKingMoves(u64 b, side s)
 
 bool board::inCheck()
 {
-  return opponentMoves & pieces[curPlayer][piece::king];
+  return generated_moves[opponent] & pieces[curPlayer][piece::king];
 }
 
 // king vs king, king and bishop vs king, king and knight vs king, king and bishop vs and bishop on same coliur
@@ -322,6 +315,8 @@ bool board::checkInsufficientMaterial()
 {
   if (pieces_side[curPlayer] == pieces[curPlayer][piece::king]) {
 	u64 enemy_pieces = pieces_side[opponent]  ^ pieces[opponent][piece::king];
+	enemy_pieces *= 2;
+	return false;
   }
 
   return false;
@@ -384,4 +379,9 @@ void board::doQueensideCastle(const move &m)
 void board::doKingsideCastle(const move &m) {
 	pieces[curPlayer][piece::rook] ^= (m.end.loc << 1 | m.end.loc >> 1);
 	setPiecesSide();
+}
+
+side board::getCurPlayer()
+{
+	return curPlayer;
 }

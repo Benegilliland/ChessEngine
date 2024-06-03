@@ -4,8 +4,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-engine::engine(bool gui_enabled, int width, int height)
+engine::engine(control _white, control _black, bool gui_enabled, int width, int height)
 {
+  players[side::white] = _white;
+  players[side::black] = _black;
+
+  if (_white == control::computer || _black == control::computer)
+	ai = new c_ai();
+
   if (gui_enabled)
     init_gui(width, height);
 }
@@ -64,9 +70,15 @@ b_pos engine::getStartPos()
   bool validPos = false;
 
   while (!validPos) {
-    pos = gui ? gui->getStartPos() : b.getStartPos();
-    board_pos = b.getBoardPos(pos);
-    b.printBitboard(board_pos.loc);
+    control c = players[b.getCurPlayer()];
+
+    if (c == control::computer)
+	board_pos = ai->getStartPos(b);
+    else {
+	pos = (gui ? gui->getStartPos() : b.getStartPos());
+	board_pos = b.getBoardPos(pos);
+    }
+
     validPos = b.validateStartPos(board_pos);
     if (!validPos && gui) gui->stopDragging();
   }
@@ -76,8 +88,18 @@ b_pos engine::getStartPos()
 
 b_pos engine::getEndPos()
 {
-	s_pos pos = gui ? gui->getEndPos() : b.getEndPos();
-	return b.getBoardPos(pos);
+	control c = players[b.getCurPlayer()];
+	s_pos pos;
+	b_pos board_pos;
+	std::cout << "Test\n";
+	if (c == control::computer)
+		board_pos = ai->getEndPos();
+	else {
+		pos = gui ? gui->getEndPos() : b.getEndPos();
+		board_pos = b.getBoardPos(pos);
+	}
+
+	return board_pos;
 }
 
 void engine::showAvailableMoves(const b_pos &p)

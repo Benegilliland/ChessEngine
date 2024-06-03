@@ -25,7 +25,7 @@ bool g_eventhandler::getStartPos(s_pos &p, SDL_Point &pt)
 		if (e.type == SDL_MOUSEBUTTONDOWN) {
 			pt = {e.button.x - width / 16, e.button.y - height / 16};
 			p = mouseToBoard(e);
-			std::cout << "Mouse down\n";
+
 			return true;
 		}
 	}
@@ -46,7 +46,6 @@ bool g_eventhandler::getEndPos(s_pos &p, SDL_Point &pt)
 
 		else if (e.type == SDL_MOUSEBUTTONUP) {
 			p = mouseToBoard(e);
-			std::cout << "Mouse up\n";
 			return true;
 		}
 

@@ -32,7 +32,8 @@ private:
   int fiftyMoveCounter;
   u64 enPassant;
   u64 startMoves;
-  u64 opponentMoves;
+  u64 generated_moves[NUM_SIDES];
+  u64 generated_ray_moves[NUM_SIDES];
 
   // Console functions
   char printPos(u64);
@@ -48,7 +49,6 @@ private:
   u64 genWhitePawnMoves(u64);
   u64 genBlackPawnMoves(u64);
   u64 genPawnMoves(u64, side);
-  u64 genDiagonalPawnMoves(u64, side);
   u64 genRookMoves(u64, side);
   u64 genBishopMoves(u64, side);
   u64 genKnightMoves(u64, side);
@@ -56,15 +56,15 @@ private:
   u64 genCastlingMoves(u64, side);
   u64 genKingMoves(u64, side);
   u64 validateKingMoves(u64, side);
-  u64 genOpponentRayMoves();
-  u64 genMoves(side);
+  u64 genRayMoves(side);
+  void genMoves(side);
   void togglePiece(const b_pos &, side);
   bool checkFiftyMoveDraw();
   bool checkInsufficientMaterial();
   bool checkRepetitionDraw();
   bool pieceCanMove(const b_pos &);
   u64 pieceCanBlockCheck(const b_pos &, u64);
-  int countMoves(side);
+  int countMoves();
 
 public:
   void reset();
@@ -93,5 +93,6 @@ public:
   void doEnPassant(const move &);
   void setMoveType(move &);
   double hashBoard();
+  side getCurPlayer();
 };
 

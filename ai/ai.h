@@ -1,18 +1,20 @@
 #include "../common.h"
 #include "../board/board.h"
 
-class ai {
-private:
-	const board &b;
-	const side s;
+struct best_move {
+	int score;
+	move m;
+};
 
-	u64 getPieceMoves(u64);
-	int evaluateBoard();
-	int evaluateMove(const move &);
+class c_ai {
+private:
+	b_pos endPos;
+	move bestMove[4];
+
+	int getBestMove(board &, int);
 
 public:
-	ai(const board &, const side &);
-	s_pos getStartMove();
-	s_pos getEndMove();
+	b_pos getStartPos(board &);
+	b_pos getEndPos();
 	piece getPawnUpgrade();
 };

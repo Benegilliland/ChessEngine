@@ -23,6 +23,10 @@ enum piece : int {
   none = 6,
 };
 
+enum control {
+	human, computer
+};
+
 struct s_pos {
 	int rank, file;
 };
