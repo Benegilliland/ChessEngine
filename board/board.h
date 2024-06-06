@@ -57,7 +57,7 @@ private:
   u64 genKingMoves(u64, side);
   u64 validateKingMoves(u64, side);
   u64 genRayMoves(side);
-  void genMoves(side);
+  u64 genMoves(side);
   void togglePiece(const b_pos &, side);
   bool checkFiftyMoveDraw();
   bool checkInsufficientMaterial();

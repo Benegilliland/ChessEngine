@@ -4,7 +4,7 @@ int main(int argc, char *argv[])
 {
 	bool gui_enabled = true;
 	control white = control::human;
-	control black = control::computer;
+	control black = control::human;
 	int width = 800;
 	int height = 800;
 

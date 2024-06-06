@@ -4,8 +4,6 @@
 // Add draw by repetition
 // Add draw by insufficient material
 // Add pawn upgrade GUI
-// Shortcut for checking whether piece can move is broken
-// Pawns can double move through enemy piece
 // Optimisation
 
 void board::reset()
@@ -91,8 +89,8 @@ void board::doMove(const move &m)
   else
     fiftyMoveCounter = 0;
 
-  genMoves(side::white);
-  genMoves(side::black);
+  generated_moves[side::white] = genMoves(side::white);
+  generated_moves[side::black] = genMoves(side::black);
 }
 
 void board::undoLastMove() {
@@ -130,10 +128,15 @@ void board::togglePiece(const b_pos &p, side s)
   empty ^= p.loc;
 }
 
+// Optimise
 bool board::pieceCanMove(const b_pos &p)
 {
-	return (p.loc & generated_ray_moves[opponent]
-		& genQueenMoves(pieces[curPlayer][piece::king], opponent)) == 0;
+	/*return (p.loc & generated_ray_moves[opponent]
+		& genQueenMoves(pieces[curPlayer][piece::king], opponent)) == 0;*/
+	togglePiece(p, curPlayer);
+	bool canMove = (genMoves(opponent) & pieces[curPlayer][piece::king]) == 0;
+	togglePiece(p, curPlayer);
+	return canMove;
 }
 
 bool board::hasAvailableMoves()
@@ -240,7 +243,7 @@ u64 board::genRayMoves(side s)
 	return b;
 }
 
-void board::genMoves(side s)
+u64 board::genMoves(side s)
 {
   u64 b = genRayMoves(s);
   generated_ray_moves[s] = b;
@@ -248,8 +251,7 @@ void board::genMoves(side s)
   b |= genPawnMoves(pieces[s][piece::pawn], s);
   b |= genKnightMoves(pieces[s][piece::knight], s);
   b |= genKingMoves(pieces[s][piece::king], s);
-  generated_moves[s] = (b & ~pieces_side[s]);
-
+  return b & ~pieces_side[s];
 }
 
 u64 board::genStartMoves(const b_pos &p)
