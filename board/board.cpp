@@ -162,13 +162,13 @@ void board::switchPlayer()
 
 u64 board::genWhitePawnMoves(u64 b)
 {
-  return (b >> 8 & empty) | ((b & piece_start[side::white][piece::pawn]) >> 16 & empty)
+  return (b >> 8 & empty) | ((b & piece_start[side::white][piece::pawn]) >> 16 & empty & empty >> 8)
     | (((b >> 7 & ~left_boundary) | (b >> 9 & ~right_boundary)) & (pieces_side[side::black] | enPassant));
 }
 
 u64 board::genBlackPawnMoves(u64 b)
 {
-  return (b << 8 & empty) | ((b & piece_start[side::black][piece::pawn]) << 16 & empty)
+  return (b << 8 & empty) | ((b & piece_start[side::black][piece::pawn]) << 16 & empty & empty << 8)
     | (((b << 7 & ~right_boundary) | (b << 9 & ~left_boundary)) & (pieces_side[side::white] | enPassant));
 }
 
